@@ -1,0 +1,64 @@
+<apex:page standardController="HD_Product__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="HD Product Name">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="PN Code">
+<apex:inputField value="{!a.PN_Code__c}"/>
+</apex:column>
+<apex:column headerValue="Program Type">
+<apex:inputField value="{!a.Program_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Product Type">
+<apex:inputField value="{!a.Product_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Primary Base Course">
+<apex:inputField value="{!a.Primary_Base_Course__c}"/>
+</apex:column>
+<apex:column headerValue="Family">
+<apex:inputField value="{!a.Family__c}"/>
+</apex:column>
+<apex:column headerValue="Product Category">
+<apex:inputField value="{!a.Product_Category__c}"/>
+</apex:column>
+<apex:column headerValue="Language">
+<apex:inputField value="{!a.Language__c}"/>
+</apex:column>
+<apex:column headerValue="PN Type">
+<apex:inputField value="{!a.PN_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Product Description">
+<apex:inputField value="{!a.Product_Description__c}"/>
+</apex:column>
+<apex:column headerValue="Category Name Old">
+<apex:inputField value="{!a.Category_Name_Old__c}"/>
+</apex:column>
+<apex:column headerValue="ISBN No">
+<apex:inputField value="{!a.ISBN_No__c}"/>
+</apex:column>
+<apex:column headerValue="MF Can't Order">
+<apex:inputField value="{!a.MF_Product__c}"/>
+</apex:column>
+<apex:column headerValue="Product Status">
+<apex:inputField value="{!a.Product_Status__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

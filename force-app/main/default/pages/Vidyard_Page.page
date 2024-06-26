@@ -1,0 +1,10 @@
+<apex:page showHeader="false" showChat="false" sidebar="false">
+ <iframe width="640" height="360"
+ class="vidyard_iframe"
+ scrolling="no"
+ src="https://play.vidyard.com/{!$CurrentPage.parameters.VideoID}.html?v=3.1"
+ frameborder="0"
+ allowfullscreen="true"
+ allowtransparency="true">
+ </iframe>
+</apex:page>

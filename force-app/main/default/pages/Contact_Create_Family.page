@@ -1,0 +1,15 @@
+<!--/* Name                        :
+Description                    :
+Related components             :Flow: Create_Family_Record_from_Contact + Button On Contact:    New_Family
+File Version                   :
+ 
+Created/Modified by   Created/Modified Date     Requested by          Related Task/Issue 
+        Shahar            22.12                    Ella           SW-16760 - HD - Create Family Action   
+----------------------------------------------------------------------------------------*/ -->
+
+<apex:page StandardController="Contact" >
+
+      <flow:interview name="Create_Family_Record_from_Contact" finishLocation="{!URLFOR($Action.Contact.View, Contact.id)}">
+         <apex:param name="varContactID" value="{!Contact.Id}"/>
+      </flow:interview>
+</apex:page>

@@ -1,0 +1,66 @@
+<apex:page standardController="Contact" extensions="ContactTransferOwnership_Ctrl" showHeader="false" standardStylesheets="false" sidebar="false" >
+    <head>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+        
+        <style>
+            .buttonGreen{
+                background-color: #8ab529 !important;
+                border: 1px solid #6c8049 !important;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    
+    <apex:form >
+        <div class="hd" >
+            
+            <div class="publishercontainer slds-form-element">
+                <apex:outputPanel layout="block" styleClass="slds-lookup" id="divLookup" html-data-select="single" html-data-scope="single" html-data-typeahead="true">
+                    <div class="slds-form-element">
+                        <label class="slds-form-element__label" style="font-weight: bold;margin-right: 0px;" for="lookup">{!$ObjectType['Contact'].Fields['Transfer_to_Franchise__c'].Label}</label>
+                        <img src="/img/alohaSkin/help_orange.png" alt="Help" class="helpIcon" title="{! $ObjectType['Contact'].Fields['Transfer_to_Franchise__c'].inlineHelpText}"/>
+                        
+                        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--right">
+                            <apex:inputField id="lookup" value="{!Contact.Transfer_to_Franchise__c}" styleclass="slds-input" style="visibility:hidden" />
+                        </div>
+                    </div>
+                    <script>
+                        var lkInput = document.getElementById("{!$Component.lookup}");
+                        lkInput.style.visibility = "";
+                        var lkSpan = lkInput.parentElement;
+                        var lkLink = lkSpan.querySelector("a");
+                        lkLink.style.visibility = "";
+                        lkLink.className = "";
+                        lkLink.innerHTML = "<svg aria-hidden=\"true\" class=\"slds-input__icon\"><use xlink:href=\"" + "{!URLFOR($Resource.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#search')}" + "\"></use></svg>";
+                    </script>
+                </apex:outputPanel>
+                
+                <div class="slds-grid" style="margin-top: -5px;" >
+                    <div class="slds-col">
+                        <div class="slds-box slds-box--small slds-theme--shade slds-text-align--right">
+                            <apex:commandButton value="Update" action="{!save}" reRender="reRenderScript" styleClass="slds-button slds-button--success buttonGreen" />
+                        </div>
+                    </div>
+                </div>
+            </div>            
+        </div>
+    </apex:form>
+    
+    <apex:outputPanel id="reRenderScript">
+        <script>
+            var resp = '{! resp }';
+            if( resp != '' && resp != undefined && resp != null ){
+                resp = JSON.parse(resp );
+                
+                if( resp.success == "false" ){
+                    alert( resp.msg );
+                }else{
+                    refreshParent();
+                }
+            }
+            function refreshParent(){
+                parent.location.href=parent.location.href;
+            }
+        </script>
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,22 @@
+<apex:page controller="AnnualBusinessMeeting">
+    <apex:sectionHeader title="Annual Business Meeting"/>
+
+    
+        
+            <p>Welcome to the Annual Business Meeting. Please click the button below to proceed.</p>
+            <form action='https://helendoron.info/schedule/abm.php' method='post' name='myform' >
+
+                <!-- Priority number -->
+
+                <input type='hidden' value='{!accountBuisness}' name='hdc_mfid' />
+
+                <input type='submit'  value='Click here' />
+
+            </form>3
+        
+            <script type="text/javascript">
+
+                document.myform.submit();
+            
+            </script>
+</apex:page>

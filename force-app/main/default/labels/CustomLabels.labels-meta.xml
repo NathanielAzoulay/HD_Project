@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>CC_Admin</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC_Admin</shortDescription>
+        <value>005D0000008iCYG</value>
+    </labels>
+    <labels>
+        <fullName>Case_HDC_Support_Record_Type</fullName>
+        <categories>Process Builder, Flow, Validation Rules</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case - HDC Support Record Type ID</shortDescription>
+        <value>012D00000007T6tIAE</value>
+    </labels>
+    <labels>
+        <fullName>Contact_Duplicate_Users</fullName>
+        <categories>Contact</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Exist another user with the same nickname</shortDescription>
+        <value>There is another user with the same nickname. Please contact your AM</value>
+    </labels>
+    <labels>
+        <fullName>Content_Duplication_Error</fullName>
+        <categories>Content</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Content Duplication Error</shortDescription>
+        <value>There is another content file with the same content old Id and same version. 
+File Name: 
+File ID:</value>
+    </labels>
+    <labels>
+        <fullName>Content_Not_in_HDC</fullName>
+        <categories>Content</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Content - Not in HDC</shortDescription>
+        <value>Be aware that this content will not be displayed in HDC, pls unchecked HDC File to continue.</value>
+    </labels>
+    <labels>
+        <fullName>Create_Lessons_without_Days_Hours</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create Lessons without Days &amp; Hours</shortDescription>
+        <value>Please create first Days &amp; Hours</value>
+    </labels>
+    <labels>
+        <fullName>Create_User_Message</fullName>
+        <categories>Roles &amp; Permissions</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create User Message</shortDescription>
+        <value>The user creation is in process</value>
+    </labels>
+    <labels>
+        <fullName>Create_User_Not_Active</fullName>
+        <categories>Create User</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Create User - Not Active</shortDescription>
+        <value>Please activate the contact before creating user</value>
+    </labels>
+    <labels>
+        <fullName>Don_t_have_permission_on_button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Don&apos;t have permission on button</shortDescription>
+        <value>You don&apos;t have permission to execute this action</value>
+    </labels>
+    <labels>
+        <fullName>Generate_payments_to_LG_Student_PriceType_Per_Group_on_LG_Payments</fullName>
+        <categories>Payment</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generate payments to LG Student -  PriceType &apos;Per Group&apos; on LG Payments</shortDescription>
+        <value>To generate payments for LG use this button from the LG Layout</value>
+    </labels>
+    <labels>
+        <fullName>Generate_payments_to_LG_Student_days_after_the_LG_Start_paying_Date</fullName>
+        <categories>Payment</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generate payments to LG Student - days after the LG Start paying Date</shortDescription>
+        <value>You can&apos;t change Billing Type or Generate Payments, more than 30 days after &apos;Student Start Paying Date&apos;</value>
+    </labels>
+    <labels>
+        <fullName>Generate_payments_to_LG_days_after_the_LG_Start_paying_Date</fullName>
+        <categories>Payment</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generate payments to LG  - days after the LG Start paying Date</shortDescription>
+        <value>You can&apos;t change Billing Type or Generate Payments, more than 30 days after &apos;LG Start paying Date&apos;</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Admin_ID</fullName>
+        <categories>Workflows, Process Builder</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Admin ID</shortDescription>
+        <value>005D00000026k6MIAQ</value>
+    </labels>
+    <labels>
+        <fullName>HDC_MF_User_Profile_Id</fullName>
+        <categories>Task-000001930</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC MF User Profile Id</shortDescription>
+        <value>00eD0000001VA4fIAG</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Add_to_existing_Order_Consolidation</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Add to existing Order Consolidation</shortDescription>
+        <value>Add to existing Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Consolidate_without_MF_Products</fullName>
+        <categories>Product</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Consolidate without MF Products</shortDescription>
+        <value>Pls pay attention that consolidation order will not include MF Products</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Create_new_Order_Consolidation</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Create new Order Consolidation</shortDescription>
+        <value>Create new Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Duplicate</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Duplicate</shortDescription>
+        <value>There is alredy Order Product Line with this PN Code - pls update the existing line.</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_No_Products_Available</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC_Order_No_Products_Available</shortDescription>
+        <value>No Products available for creating a new Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Open_Order_Consolidation</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Open Order Consolidation</shortDescription>
+        <value>The action was submitted, you&apos;ll soon be redirected to the Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Order_Consolidation</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Order Consolidation</shortDescription>
+        <value>Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Please_choose_Order</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Please choose Order</shortDescription>
+        <value>Please choose Orders that doesn&apos;t belongs to Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>HDC_Order_Price_List_Title_is_not_Active</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HDC Order - Price List Title is not Active</shortDescription>
+        <value>The Price List Title you used for this order is not active anymore, Please create order with active Price List Title</value>
+    </labels>
+    <labels>
+        <fullName>LG_Days_Hours_Number_of_Days</fullName>
+        <categories>LG Days &amp; Hours</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>LG Days &amp; Hours - Number of Days</shortDescription>
+        <value>Number of lesson for a day is reached the &quot;Max Lessons per Day	
+&quot;</value>
+    </labels>
+    <labels>
+        <fullName>LG_Payment_Amount_Paid_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>LG Payment - Amount Paid Error Message</shortDescription>
+        <value>Please change the Amount Paid for payments to Null before changing Declared number of Students, because the Payments are going to delete.</value>
+    </labels>
+    <labels>
+        <fullName>Lead</fullName>
+        <categories>Lead</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Lead - Franchise does not exist</shortDescription>
+        <value>Franchise does not exist. Update the lead details</value>
+    </labels>
+    <labels>
+        <fullName>Multi_Order_Already_Exists</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Multi Order - Already Exists</shortDescription>
+        <value>Please choose Orders that doesn&apos;t belong to Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>Multi_Order_FP</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Multi Order - FP</shortDescription>
+        <value>Please choose Orders with status &quot;Sent to FP&quot;</value>
+    </labels>
+    <labels>
+        <fullName>Multi_Order_HD_Price_List_Title</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Multi Order – HD Price List Title</shortDescription>
+        <value>Please choose Orders with the same HD Price List</value>
+    </labels>
+    <labels>
+        <fullName>Multi_Order_MF</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Multi Order – MF</shortDescription>
+        <value>Please choose Orders with status &quot;Sent to MF&quot;</value>
+    </labels>
+    <labels>
+        <fullName>Multi_Order_Not_Draft</fullName>
+        <categories>HDC Order</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Multi Order - Not Draft</shortDescription>
+        <value>Please use only draft orders for Order Consolidation</value>
+    </labels>
+    <labels>
+        <fullName>New_Line</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Line</shortDescription>
+        <value>-
+-</value>
+    </labels>
+    <labels>
+        <fullName>PriceType_Per_Student_on_LG_Payments</fullName>
+        <categories>Payment</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generate payments to LG - PriceType &apos;Per Student&apos; on LG Payments</shortDescription>
+        <value>To generate payments for student, use this button from the LG Student Layout</value>
+    </labels>
+    <labels>
+        <fullName>Sales_Coordinator_ID</fullName>
+        <categories>Process Builder, Flow, Validation Rules</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Coordinator ID</shortDescription>
+        <value>005D00000055JuE</value>
+    </labels>
+    <labels>
+        <fullName>Seminar_MassPassed_Choose_Seminar_Teacher_Record</fullName>
+        <categories>Seminar - Mass Passed button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Check that at least one Seminar Teacher is chosen</shortDescription>
+        <value>Please choose at least one teacher</value>
+    </labels>
+    <labels>
+        <fullName>Seminar_MassPassed_Only_Mass_Training</fullName>
+        <categories>Seminar - Mass Passed button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Check that the Seminar Type is &quot;Mass Training&quot;</shortDescription>
+        <value>You can mass pass teachers, only when the Seminar Type is &quot;Mass Training&quot;</value>
+    </labels>
+    <labels>
+        <fullName>Seminar_MassPassed_UsedBy_Teacher_Trainer</fullName>
+        <categories>Seminar - Mass Passed button</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Check that the user is Teacher Trainer of the TTC/Seminar</shortDescription>
+        <value>You can use this button, only if you are the Teacher Trainer for the TTC/Seminar</value>
+    </labels>
+    <labels>
+        <fullName>Seminar_Session_required</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Require to fill Seminar Session Number</shortDescription>
+        <value>In order to create Seminar Session Invoice, please fill Seminar Session Number</value>
+    </labels>
+    <labels>
+        <fullName>System_Admin_ProfileId</fullName>
+        <categories>Task-000001922</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System Admin ProfileId</shortDescription>
+        <value>00eD0000001mPgCIAU</value>
+    </labels>
+    <labels>
+        <fullName>TT_Payment_Created_Successfully</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>show success message when new TT Payment is created</shortDescription>
+        <value>TT Payment record was created successfully</value>
+    </labels>
+    <labels>
+        <fullName>TT_Payment_Teacher_Trainer</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose TTC/Seminars that are assigned to the current TT user</shortDescription>
+        <value>You can choose only records that you are assigned as TT</value>
+    </labels>
+    <labels>
+        <fullName>TT_Payment_choose_record</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose at least one TTC/Seminars on order to create TT Payment</shortDescription>
+        <value>Please choose at least one record</value>
+    </labels>
+    <labels>
+        <fullName>TT_Payment_lookup_not_null</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Check that all checked TTC/Seminars has a blank value in TTC/Seminars.TT Payment</shortDescription>
+        <value>please choose only TTC/Seminars that are not already a part of a TT Payment</value>
+    </labels>
+    <labels>
+        <fullName>TT_Payment_status_evaluated</fullName>
+        <categories>Seminar</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Choose TTC/Seminars that are in status Evaluated</shortDescription>
+        <value>Please choose TTC/Seminars with status &quot;Evaluated&quot;</value>
+    </labels>
+    <labels>
+        <fullName>Text_on_Discount_Markup</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Text on Discount/Markup</shortDescription>
+        <value>For Markup and Discount options, enter the value without the % sign. i.e. 40, will apply 40% discount or markup - based on your selection</value>
+    </labels>
+    <labels>
+        <fullName>VR_message_Task_000001922</fullName>
+        <categories>Task-000001922</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>VR message Task-000001922</shortDescription>
+        <value>This Case status is &apos;Resolved&apos;. Please change the status to &apos;Not Resolved&apos; in order to add a new comment.</value>
+    </labels>
+    <labels>
+        <fullName>VfDedupliacteContact_LinkContacts</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>VfDeduplicateContact_LinkContact</shortDescription>
+        <value>Please select the Contact to link</value>
+    </labels>
+    <labels>
+        <fullName>VfDeduplicateContact_No</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>VfDeduplicateContact_No</shortDescription>
+        <value>No</value>
+    </labels>
+    <labels>
+        <fullName>VfDeduplicateContact_Yes</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>VfDeduplicateContact_Yes</shortDescription>
+        <value>Yes</value>
+    </labels>
+    <labels>
+        <fullName>Zero_Payment_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Zero Payment Success</shortDescription>
+        <value>Your action is completed successfully</value>
+    </labels>
+</CustomLabels>

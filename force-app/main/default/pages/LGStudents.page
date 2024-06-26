@@ -1,0 +1,296 @@
+<apex:page standardController="LG__c" extensions="LGStudentsController">
+   
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+   <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css"/>
+   <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+   <script type="text/javascript" src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+
+   <script>
+           var j$ = jQuery.noConflict();
+           var j$modalDialog;
+
+           function addNewStudentJS(){
+                var iframe_url = '{!URLFOR("/apex/LGNewStudent?lgid=LG__c.Id")}';
+                j$modalDialog = j$('<div></div>')
+                       .html('<iframe id="iframeContentId" src="' + iframe_url + '" frameborder="0" height="100%" width="100%" marginheight="0" marginwidth="0" scrolling="no" />')
+                       //.html('<span>Pending!!!</span>')
+                       .dialog({
+                            autoOpen: false,
+                            title: 'New Student',
+                            resizable: false,
+                            width: 400,
+                            height: 400,
+                            autoResize: true,
+                            modal: true,
+                            draggable: false
+                });
+                 
+                j$modalDialog.dialog('open');
+            }
+            var studentToRemove;
+            function removeStudentJS(element,student){
+                if(j$(element).val() != 'Removed'){
+                  return false;
+                }
+                studentToRemove = student;
+                var iframe_url = '{!URLFOR("/apex/LGRemoveStudent")}'+"?studentid="+student;
+                j$modalDialog = j$('<div></div>')
+                       .html('<iframe id="iframeContentId" src="' + iframe_url + '" frameborder="0" height="100%" width="100%" marginheight="0" marginwidth="0" scrolling="no" />')
+                       .dialog({
+                            autoOpen: false,
+                            title: 'LG Student',
+                            resizable: false,
+                            width: 400,
+                            height: 160,
+                            autoResize: true,
+                            modal: true,
+                            draggable: false,
+                            close: cancelRemoveStudentPostBackJS
+                });
+                 
+                j$modalDialog.dialog('open');
+            }
+
+            function resizeModalJS(w,h){
+              j$modalDialog.dialog({
+                width: w,
+                height: h,
+              })
+            }
+
+            /*function previousValue(index){
+
+            }*/
+
+            function cancelRemoveStudentPostBackJS(){
+                j$modalDialog.dialog('close');
+                doReloadDataJS(studentToRemove);
+            }
+            
+            function addNewStudentPostBackJS(studentId){
+                j$modalDialog.dialog('close');
+                DoAddFromNewStudentJS(studentId);
+            }
+            j$( document ).ready(function(){
+
+              j$(".ptTableResize th.resizethis").resizable({
+               handles: "e"
+              });
+
+            });
+   </script> 
+   
+   <style>
+       
+       div.imgs{
+            width: 60px;
+            display: inline-block;
+            vertical-align: top;
+            *display: inline;
+            *zoom: 1; 
+       }
+      
+      #summarizebox{
+        position: inherit;
+        margin-top: -90px;
+        margin-bottom: 30px;
+        border: solid 1px blue;
+        padding: 10px;
+        width: 150px;
+        -webkit-box-shadow: -1px 1px 1px 1px rgba(0,0,0,0.75);
+        -moz-box-shadow: -1px 1px 1px 1px rgba(0,0,0,0.75);
+        box-shadow: -1px 1px 1px 1px rgba(0,0,0,0.75);
+      } 
+
+      #summarizebox div {
+        display: flex;
+      }  
+
+      .summarizelabel{
+        width: 100%;
+      }
+
+      /*.pbTable-column input, .pbTable-column select, .pbTable-column textarea{
+        width: 60%;
+      }*/
+      .statuspicklist select{
+        width:132px;
+      }
+
+      #ButtonStatus{
+        position: absolute;
+        top: 100px;
+      }
+
+      .pbButton{
+          height: 70px;
+      }
+
+      .studentsForm{
+          width:100%;
+        }
+
+      @media screen and (max-width: 1360px) {
+        .studentsForm{
+          width: 1360px;
+        }
+      }
+   </style>
+   
+   <apex:form styleClass="studentsForm">  
+      <apex:actionFunction name="DoDeleteJS" action="{!DoDelete}" rerender="pbContainer,msgs" immediate="true">
+      <apex:param name="ActionId" assignto="{!ActionId}" value="" />
+   </apex:actionFunction>
+   <apex:actionFunction name="DoRemoveJS" action="{!DoRemove}" rerender="pbContainer,msgs" immediate="true">
+      <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+   </apex:actionFunction>   
+   <apex:actionFunction name="DoAddFromNewStudentJS" action="{!DoAddFromNewStudent}" rerender="pbContainer,msgs" immediate="true">
+      <apex:param name="ActionId" assignto="{!ActionId}" value="" />
+   </apex:actionFunction>
+   
+   <apex:actionFunction action="{!doChangeStatus}" name="doChangeStatusJS" reRender="pbContainer">
+       <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+   </apex:actionFunction>
+   <apex:actionFunction action="{!doChangeLessonType}" name="doChangeLessonTypeJS" reRender="pbContainer">
+       <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+   </apex:actionFunction>
+   <apex:actionFunction action="{!doReloadData}" name="doReloadDataJS" reRender="pbContainer">
+       <apex:param name="currentStudent" assignto="{!currentStudent}" value="" />
+   </apex:actionFunction>
+   <apex:actionFunction action="{!doStudentRowCheckDiscount}" name="doStudentRowCheckDiscountJS" reRender="pbContainer,msgs">
+       <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+   </apex:actionFunction>
+    
+   <apex:pageMessages id="msgs" />
+  
+   <apex:pageBlock mode="edit" id="criteria"  >
+
+      <script type="text/javascript">
+      function doSearch() {
+        searchServer(
+          document.getElementById("LessonType").options[document.getElementById("LessonType").selectedIndex].value,
+          document.getElementById("StatusInLG").options[document.getElementById("StatusInLG").selectedIndex].value
+          );
+      }
+      </script> 
+
+      <apex:actionFunction status="loading" name="searchServer" action="{!runSearch}" rerender="pbContainer,msgs">
+          <apex:param name="LessonType" value="" />
+          <apex:param name="statusInLG" value="" />
+      </apex:actionFunction>
+
+      
+      <table cellpadding="2" cellspacing="2">
+ 
+          <tr>
+            <td style="font-weight:bold;">Lesson Type:&nbsp;&nbsp;
+              <select id="LessonType" onchange="doSearch();">
+                <option value="">All</option>
+                <apex:repeat value="{!lessonTypes}" var="tech">
+                  <option value="{!tech}">{!tech}</option>
+                </apex:repeat>
+             </select>
+             </td>
+             <td style="font-weight:bold;">Status in LG:&nbsp;&nbsp;
+              <select id="StatusInLG" onchange="doSearch();">
+                <option value="">All</option>
+                <apex:repeat value="{!statusInLG}" var="tech">
+                  <option value="{!tech}">{!tech}</option>
+                </apex:repeat>
+              </select>
+            </td>
+            <td>                 
+                <apex:actionstatus id="loading">
+                    <apex:facet name="start">
+                        <apex:outputPanel layout="block">
+                            <img height="16" width="16" src="/img/loading.gif" />
+                        </apex:outputPanel>
+                    </apex:facet>    
+                    <apex:facet name="stop" />
+                </apex:actionstatus>
+           </td>             
+          </tr>
+      </table>
+      
+   </apex:pageBlock>
+  
+   <apex:pageBlock id="pbContainer">
+      <script>
+        j$(".ptTableResize th.resizethis").resizable({
+         handles: "e"
+        });
+      </script>
+      
+      <apex:pageBlockButtons location="top">
+        
+         <apex:actionStatus id="ButtonStatus">
+            <apex:facet name="stop">
+               <apex:outputPanel >
+                  <apex:commandButton rerender="pbContainer,msgs" status="ButtonStatus" value="Create New Student" onclick="addNewStudentJS();" immediate="true" rendered="{!AllowAdd}" />   
+                  <apex:commandButton rerender="pbContainer,msgs" status="ButtonStatus" value="Add from existing Students" action="{!DoAdd}" immediate="true" rendered="{!AllowAdd}" />
+                  <apex:commandButton rerender="pbContainer,msgs" status="ButtonStatus" value="Save" action="{!DoSave}" rendered="{!OR(AllowEdit,AllowAdd)}" disabled="{!DisableSave}" />
+                  <apex:commandButton rerender="pbContainer,msgs" status="ButtonStatus" value="Cancel" action="{!DoCancel}" immediate="true" rendered="{!OR(AllowEdit,AllowAdd)}" disabled="{!DisableCancel}" />
+               </apex:outputPanel>
+            </apex:facet>
+            <apex:facet name="start">
+               <apex:outputPanel >
+                  <apex:commandButton value="Processing..." disabled="true" rendered="{!AllowAdd}" />
+                  <apex:commandButton value="Processing..." disabled="true" rendered="{!OR(AllowEdit,AllowAdd)}" />
+                  <apex:commandButton value="Processing..." disabled="true" rendered="{!OR(AllowEdit,AllowAdd)}" />
+                  <apex:commandButton value="Processing..." disabled="true" rendered="{!OR(AllowEdit,AllowAdd)}" />
+               </apex:outputPanel>
+            </apex:facet>            
+         </apex:actionStatus>         
+      </apex:pageBlockButtons>
+
+      <div id='summarizebox'>
+          <div><div  class="summarizelabel">Approved Students:</div><div class="summarizevalue">{!approvedStudents}</div></div>
+          <div><div  class="summarizelabel">All Students:</div><div class="summarizevalue">{!allStudents}</div></div>
+          <div><div  class="summarizelabel">All Filtered:</div><div class="summarizevalue">{!ObjectList.size}</div></div>
+      </div>
+          <apex:pageBlockTable id="pbTable" styleClass="ptTableResize" value="{!ObjectList}" var="ow">
+             <apex:column headerValue="Action" width="50px" rendered="{!OR(AllowEdit,AllowDelete,AllowAdd)}">
+                
+                <apex:outputPanel rendered="{!false && ISBLANK(ow.obj.Id)}">
+                   <apex:outputLink style="color: #015BA7;" styleClass="cmdLink" value="javascript:DoRemoveJS('{!JSENCODE(ow.AddedRowNumber)}');">Remove</apex:outputLink>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!false && !ISBLANK(ow.obj.Id)}">
+               <apex:outputLink style="color: #015BA7;" styleClass="cmdLink"
+                  value="javascript:if (window.confirm('Are you sure?')) DoDeleteJS('{!JSENCODE(ow.obj.Id)}');" rendered="{!AllowDelete}">Del</apex:outputLink>
+               </apex:outputPanel>
+               
+               <div class="imgs">
+                   <!--a href="#" title="Student Details"><apex:image url="{!URLFOR($Resource.HD_Images,'StudentDetails.png')}" width="20" height="20"/></a-->
+                   <a href="#" title="Student Payments"><apex:image url="{!URLFOR($Resource.HD_Images,'StudentPayments.png')}" width="20" height="20"/></a>&nbsp;                    
+                   <a href="#" title="Request for Discount"><apex:image url="{!URLFOR($Resource.HD_Images,'RequestStudentDiscount.png')}" width="23" height="23"/></a> 
+               </div>                    
+             </apex:column>
+             
+             
+             
+             <apex:repeat value="{!$ObjectType.LG_Student__c.FieldSets.LG_Student_Section}" var="f">
+                <apex:column style="{!IF(AND(NOT(ISBLANK(ow.obj.Status_in_LG__c)), ow.obj.Status_in_LG__c=='Removed'),'background-color:#D8D8D8;',IF(ow.hasLGDiscount,'background-color:#FFFEA1;',''))}" width="{!IF(f == 'Name','30px;',IF(OR(f == 'Lesson_Type__c',f == 'Student__c'),'80px;',IF(f == 'Status_in_LG__c','90px;','130px;')))}" headerClass="resizethis">
+                   <apex:facet name="header">
+                      <span>{!f.Label}</span>
+                   </apex:facet>
+                   <apex:variable value="{!false==true}" var="isFormula"/>
+                   <apex:variable value="{!false==true}" var="isReadOnly"/>
+                   <apex:outputPanel styleClass="pbTable-column">
+                      <apex:outputField value="{!ow.obj[f]}" rendered="{!(NOT(ow.IsEditMode) || isReadOnly || AND(f=='Status_in_LG__c', ISBLANK(ow.obj.Lesson_Type__c))) && NOT(isFormula)}"/>     
+                      <apex:outputLink target="_blank" value="/{!ow.obj.Id}" rendered="{!f=='Name'}">{!ow.obj[f]}</apex:outputLink>
+
+                      <apex:outputText value="{!DefaultFormulaMap[f]}" rendered="{!AND(isFormula, f!='Name')}"/>    
+                      <apex:outputpanel styleClass="{! IF(f=='Status_in_LG__c','statuspicklist','')}" >
+ 
+                        <apex:InputField value="{!ow.obj[f]}" rendered="{! f!='Name' && ow.IsEditMode && NOT(isReadOnly) && NOT(isFormula) && NOT(AND(f=='Status_in_LG__c', ISBLANK(ow.obj.Lesson_Type__c)))}" required="{!f.required}" onchange="{!IF(f=='Student__c', 'doStudentRowCheckDiscountJS('+JSENCODE(ow.AddedRowNumber)+');', IF(f=='Status_in_LG__c','doChangeStatusJS('+JSENCODE(ow.AddedRowNumber)+');removeStudentJS(this,\"' + JSENCODE(ow.obj.Id) + '\");',IF(f == 'Lesson_Type__c','doChangeLessonTypeJS('+JSENCODE(ow.AddedRowNumber)+')',''))) }" onfocus="{!IF(f=='Status_in_LG__c','','')}"/>
+                      </apex:outputpanel>
+                   </apex:outputPanel>
+                </apex:column>
+             </apex:repeat>
+            
+          </apex:pageBlockTable>
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

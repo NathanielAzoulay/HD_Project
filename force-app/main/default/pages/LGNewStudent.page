@@ -1,0 +1,46 @@
+<apex:page showHeader="false" sidebar="false" controller="LGNewStudentController">
+  
+  <style>
+    .newStudentForm{
+        overflow-y: scroll;
+        height: 360px;
+    }
+  </style>
+
+  <apex:outputPanel id="jsPanel">
+    <script>      
+      var result = JSON.parse('{!resultJSON}');
+      if(result.Result == 'success'){
+          parent.addNewStudentPostBackJS(result.Id); 
+      }
+    </script>  
+  </apex:outputPanel>  
+
+  <apex:form styleClass="newStudentForm">      
+      
+      <apex:pageMessages id="msgs" />
+  
+      <apex:pageBlock id="pbContainer" mode="edit">          
+          
+          <apex:pageBlockButtons location="bottom">
+              <apex:actionStatus id="ButtonStatus">
+                <apex:facet name="stop">
+                   <apex:outputPanel >
+                      <apex:commandButton rerender="pbContainer,msgs,jsPanel" status="ButtonStatus" value="Save" action="{!doSave}"/>
+                   </apex:outputPanel>
+                </apex:facet>
+                <apex:facet name="start">
+                   <apex:outputPanel >
+                      <apex:commandButton value="Processing..." disabled="true"/>
+                   </apex:outputPanel>
+                </apex:facet>
+             </apex:actionStatus>    
+         </apex:pageBlockButtons>           
+         <apex:pageBlockSection columns="1" collapsible="false">
+          <apex:repeat value="{!$ObjectType.Contact.FieldSets.Student}" var="f">
+              <apex:InputField value="{!newStudent[f]}" required="{!f.required}"/>
+          </apex:repeat>  
+         </apex:pageBlockSection>   
+      </apex:pageBlock>  
+  </apex:form>
+</apex:page>

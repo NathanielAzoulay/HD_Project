@@ -1,0 +1,32 @@
+<apex:page controller="RSRedirect" tabStyle="user" sidebar="false"  docType="html-5.0" >
+     <vs:importvisualstrap /> 
+    <apex:form >
+   <vs:visualstrapblock > 
+     <br/>
+       <left>
+        <apex:outputPanel >  
+            Select User Name 
+        </apex:outputPanel>
+           <c:RSAutoComplete allowClear="true" importJquery="true" labelField="UserName" SObject="User" valueField="Id" targetField="{!targetField}" style="width:250px"/>
+             <apex:commandButton value="Show User Detail"  action="{!RedirectToViewMode}"/> 
+       </left>
+       <br/>
+       <br/>
+       <apex:outputLink value="UserLoginReportPage"  target="_blank" >User Login Reports
+       </apex:outputLink>
+       <!-- Shivram 22 Jan 2018: Added below link -->
+       <br/>
+       <br/>
+      <apex:outputLink value="{!URLFOR( '/apex/RunRSRoyaltyCalculationBatchVF')}">Run Royalty Calculation</apex:outputLink>
+      
+  </vs:visualstrapblock> 
+  
+   
+  
+   </apex:form> 
+    <!--
+      <apex:commandButton value="Show User Detail" reRender="pb" style="width:100px" action="{!ReUser}" />
+                <c:AutoCompleteV2 allowClear="true" importJquery="true" labelField="Name" SObject="User" valueField="Id" targetField="{!targetField}" style="width:200px"/>
+   -->
+       
+</apex:page>

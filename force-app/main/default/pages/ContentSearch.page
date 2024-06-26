@@ -1,0 +1,904 @@
+<apex:page controller="ContentSearchController" id="contentSearchPg" sidebar="false" showHeader="true" standardStylesheets="false" applyHtmlTag="true" applyBodyTag="false" docType="html-5.0">
+    <html>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <apex:stylesheet value="{!URLFOR($Resource.SLDS_2_1_4, 'assets/styles/salesforce-lightning-design-system.min.css')}" />
+        <script src="{!URLFOR($Resource.AngularJS)}"></script>
+        <style>
+            #loading-image {
+               position: fixed;
+               top: 40%;
+               left: 47%;
+               width:4%;
+            } 
+            #loading {
+               width: 100%;
+               height: 100%;
+               background-color: rgba(255, 255, 255, 1) !important;
+               left: 0;
+               right: 0;
+               top: 0;
+               bottom: 0;
+               position: fixed;
+               display: block;
+               text-align: center;
+               z-index: 9005;
+            } 
+            .homeTab .pageTitleIcon, .individualPalette .homeBlock .pageTitleIcon
+            {
+                background-position: initial;
+                background-image: url('/img/content/content32.png') !important;
+            }
+            .Custom69Tab .pageTitleIcon, .individualPalette .Custom69Block .pageTitleIcon
+            {
+                background-position: initial;
+                background-image: url('/img/content/content32.png') !important;
+            }
+            tr.dataRow { 
+                background-color:white; 
+                border-top: 1px solid #ececec;
+            }
+            tr.dataRowExtra {
+                background-color:white; 
+                border: none;
+            }
+            .textColor {
+                color: #777 !important;
+                font-size: 90%;
+            }
+            td.dataCell {
+                border: none !important;
+            }
+            th.header {
+                background: #f2f3f3;
+                font-size: 11px;
+                padding: 3px 2px 4px 5px;
+                border-width: 0 0 1px 1px;
+                border: 1px solid #e0e3e5;
+            }
+            th.header:hover {
+                color: #015ba7;
+            }
+            #container_sidebar h3 {
+                display: block;
+                padding: 3px;
+                font-size: 11px;
+                font-weight: normal;
+                border-bottom: 1px dotted #ccc;
+            }
+            #container_sidebar h3 a.reset {
+                text-align: right;
+                font-size: 10px;
+                font-weight: normal;
+                display: block;
+                color: black;
+                text-decoration: underline;
+            }
+            .filterHeader {
+                padding: 0;
+                color: #fff;
+                background: #1797c0 url(/img/alohaSkin/sidebar_sprite.png) -209px -2px no-repeat;
+                font-weight: bold;
+            }
+            .filterHeader h2 {
+                padding: 5px 9px;
+                display: block;
+                background: transparent url(/img/alohaSkin/sidebar_sprite.png) -9px bottom no-repeat;
+            }
+            .filterBody {
+                background: #cfeef8 url(/img/alohaSkin/sidebar_sprite.png) -9px bottom no-repeat;
+                padding: 12px 9px 10px;
+            }
+            td.textColor a {
+                color: #015ba7;
+                text-decoration: none;
+            }
+            td.textColor a:hover {
+                color: #015ba7;
+            }
+            a {
+                color: black;
+            }
+            a:hover {
+                color: #015ba7;
+                text-decoration: none !important;
+            }
+            li {
+                font-size: 11px;
+            }
+            .header {
+                font-size: 11px;
+                font-weight: bold;
+            }
+            .filtermodal {
+                position: absolute;
+                border: 1px outset #666;
+                background-color: #fff;
+            }
+            .filtermodalheader {
+                display: block;
+                position: relative;
+                padding: 5px;
+                margin: 0;
+                font-size: 10px;
+                font-weight: bold;
+                border-bottom: 1px solid #ccc;
+                background-color: #eeecd1;
+                white-space: nowrap;
+                padding-right: 60px;
+            }
+            .appliedFilterBlock {
+                margin: 3px 0 3px 35px;
+                padding: 3px;
+                font-size: 11px;
+                line-height: 18px;
+                border-top: 1px dotted #979765;
+                display: block;
+            }
+            .moreTable {
+                margin: 5px;
+            }
+            .paging{
+                font-size: 12px;
+                margin-left: 30%;
+                display: inline;
+            }
+            .paging a{
+                text-decoration: underline;
+                margin-left: 2px;
+            }
+            .paging a: hover{
+                text-decoration: underline;
+            }
+            .facets.moreBlock a: hover{
+                color : red !important;
+            }
+            .docIconHolder span {
+                background: url(/sfc/images/docicons/doctype_16_sprite.png?v=188-1) no-repeat scroll 0 0 transparent;
+                width: 16px;
+                height: 16px;
+            }
+            .docIconHolder .sprite-doctype_audio_16 {
+                background-position: 0 -52px;
+            }
+            .docIconHolder .sprite-doctype_image_16 {
+                background-position: 0 -312px;
+            }
+            .docIconHolder .sprite-doctype_pdf_16 {
+                background-position: 0 -416px;
+            }
+            .docIconHolder .sprite-doctype_word_16 {
+                background-position: 0 -676px;
+            }
+            .docIconHolder .sprite-doctype_txt_16 {
+                background-position: 0 -546px;
+            }
+            .docIconHolder .sprite-doctype_zip_16 {
+                background-position: 0 -728px;
+            }
+            .docIconHolder .sprite-doctype_csv_16 {
+                background-position: 0 -78px;
+            }
+            .docIconHolder .sprite-doctype_xml_16 {
+                background-position: 0 -702px;
+            }
+            .docIconHolder .sprite-doctype_html_16 {
+                background-position: 0 -286px;
+            }
+            .docIconHolder .sprite-doctype_ppt_16 {
+                background-position: 0 -442px;
+            }
+            .docIconHolder .sprite-doctype_unknown_16 {
+                background-position: 0 -572px;
+            }
+            .docIconHolder .sprite-doctype_mp4_16 {
+                background-position: 0 -364px;
+            }
+            .docIconHolder .sprite-doctype_rtf_16 {
+                background-position: 0 -494px;
+            }
+            .docIconHolder .sprite-doctype_excel_16 {
+                background-position: 0 -130px;
+            }
+        </style>
+        <script>
+            var contentApp = angular.module("contentApp",[]);
+            var contentCon = contentApp.controller('contentCon', function($scope, $q, $filter) {
+                //$scope.getTotalCount();
+                $scope.getAllLibraries = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ContentSearchController.fetchAllLibrary}',
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getAllLanguage = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ContentSearchController.fetchAllLanguage}',
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                 $scope.getTotalCount = function(){                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ContentSearchController.fetchAllRecordCount}',
+                        function(result, event) {
+                            if (event.status) {                        
+                                $scope.totalRecordCount  = result;
+                                $scope.$apply();                        
+                            }
+                            else if (event.type === 'exception'){
+                                alert(event.message);
+                            }
+                        },
+                        {escape: false}
+                    );
+                }
+                $scope.getContent = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ContentSearchController.contents}', $scope.selectedLib,$scope.selectedLang,$scope.inputText,$scope.offSet,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getDisplayOption = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.ContentSearchController.displayOption}',
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.parseResult = function(result) {
+                    if (result != null) {
+                        result = result.replace(/&quot/gi, '"');
+                        result = result.replace(/&amp/g, '&');
+                        result = result.replace(/amp/g, '&');
+                        result = result.replace(/&lt/g, '<');
+                        result = result.replace(/&gt/g, '>');
+                        result = result.replace(/&#39/g, '\'');
+                        result = result.replace(/;/g, '');
+                        return result;
+                    }
+                }
+                $scope.libraries = [];
+                $scope.languages = [];
+                $scope.totalRecordCount = 0;
+                $scope.allContents = [];
+                $scope.allFilteredContents = [];
+                $scope.contents = [];
+                $scope.selectedLib = '';
+                $scope.selectedLang = '';
+                $scope.obj = {name : '', size : 0, isSelected : false};
+                $scope.appFilter = {name : '', label : '', filter : ''};
+                $scope.filters = {};
+                $scope.filter = {name : '', label : '', count : 0, values : {}, values2 : {}, show : false, selectedValues : [], lines : [], showMore : false, moreValues : []};
+                $scope.isloading = false;
+                $scope.appiledFilters = [];
+                $scope.displayOptions = {};
+                $scope.showDisplayOptions = false;
+                $scope.headerValues = [];
+                $scope.inputText = '';
+                $scope.libMap = {};
+                $scope.isFilterPresent = false;
+                $scope.orderList = 'title';
+                $scope.isloading = true;
+                $scope.selectedHeader = 'Title';
+                $scope.currentPage = 0;
+                $scope.totalPage = 0;
+                $scope.offSet = 0;
+                $scope.resultPerPage = 0;
+                $scope.filterList = [];
+                $scope.intialFunction = function(){
+                    //console.log('intial Function');
+                    //get all Libraries
+                    $scope.getTotalCount();
+                    $scope.getAllLibraries().then(function(result){
+                        $scope.libMap = angular.copy(result);
+                        if(Object.keys(result).length > 0){
+                            $scope.selectedLib = 'ALL_WORKSPACES';
+                            var obj = angular.copy($scope.appFilter);
+                            obj.name = 'ALL_WORKSPACES';
+                            obj.label = 'All Libraries';
+                            $scope.libraries.push(obj);
+                            
+                            obj = angular.copy($scope.appFilter);
+                            obj.name = 'PERSONAL_WORKSPACE';
+                            obj.label = 'Private Library';
+                            $scope.libraries.push(obj);
+                            
+                            obj = angular.copy($scope.appFilter);
+                            obj.name = '__sfc__disabled__';
+                            obj.label = '-----';
+                            obj.isSelected = true;
+                            $scope.libraries.push(obj);
+                            
+                            angular.forEach(result,function(name,id) {
+                                obj = angular.copy($scope.appFilter);
+                                obj.name = id;
+                                obj.label = name;
+                                $scope.libraries.push(obj);
+                            });
+                        }
+                        else{
+                            $scope.selectedLib = 'PERSONAL_WORKSPACE';
+                            var obj = angular.copy($scope.appFilter);
+                            obj.name = 'PERSONAL_WORKSPACE';
+                            obj.label = 'Private Library';
+                            $scope.libraries.push(obj);
+                        }
+                    });
+                    //get all languages
+                    $scope.getAllLanguage().then(function(result){
+                        $scope.selectedLang = '';
+                        var obj = angular.copy($scope.appFilter);
+                        obj.name = '';
+                        obj.label = 'All Languages';
+                        $scope.languages.push(obj);
+                        angular.forEach(result,function(name,id) {
+                            obj = angular.copy($scope.appFilter);
+                            obj.name = id;
+                            obj.label = name;
+                            $scope.languages.push(obj);
+                        });
+                    });                    
+                    //get display options
+                    $scope.getDisplayOption().then(function(result){
+                        $scope.displayOptions = angular.copy(result);
+                        angular.forEach($scope.displayOptions.displayHeader,function(name) {
+                            $scope.headerValues.push(name.trim());
+                        });
+                        $scope.resultPerPage = $scope.displayOptions.resultPerPage;
+                    });
+                    //get all contents
+                    $scope.fetchContent(true);
+                }
+                
+                var i = 0;
+                $scope.fetchContent = function(isMore){
+//                     if(isMore){
+//                         $scope.getContent().then(function(result2){
+//                             if($scope.allContents.length == 0)
+//                                 $scope.allContents = angular.copy(result2);
+//                             else
+//                                 $scope.allContents = $scope.allContents.concat(angular.copy(result2));
+                            
+//                             if(result2.length > 200){
+//                                 $scope.offSet = $scope.offSet + 10;
+//                                 $scope.allContents.splice($scope.allContents.length-1,1);
+//                                 $scope.fetchContent(true);
+//                             } else
+//                                 $scope.fetchContent(false);
+//                         });
+//                     }
+//                     else{
+                        $scope.getContent().then(function(result2){
+                            if(result2.error != ''){
+                                alert(result2.error);
+                            }
+                            else {
+                                $scope.allContents = angular.copy(result2.contents);
+                                $scope.allFilteredContents = angular.copy($scope.allContents);
+                                $scope.totalPage = parseInt($scope.allFilteredContents.length/$scope.resultPerPage);
+                                $scope.totalPage = (parseInt($scope.allFilteredContents.length%$scope.resultPerPage) > 0 ? $scope.totalPage + 1 : $scope.totalPage);
+                                $scope.next();
+                                $scope.isloading = false;
+                                $scope.createFilters();
+                                //console.log($scope.allContents);
+                            }
+                        //return false;
+                        });
+                    //}
+                }
+                $scope.fromOrderBy = false;
+                $scope.next = function(){
+                    if($scope.currentPage <= $scope.totalPage){
+                        if(!$scope.fromOrderBy)
+                            $scope.currentPage++;
+                        $scope.contents = [];
+                        $scope.fromOrderBy = false;
+                        for(var i = (($scope.currentPage*$scope.resultPerPage)+1-$scope.resultPerPage)-1; 
+                                i < ($scope.currentPage*$scope.resultPerPage) && i < $scope.allFilteredContents.length ; i++){
+                            $scope.contents.push($scope.allFilteredContents[i]);
+                        }
+                    }
+                }
+                $scope.previous = function(){
+                    if($scope.currentPage > 1){
+                        $scope.currentPage--;
+                        $scope.contents = [];
+                        for(var i = (($scope.currentPage*$scope.resultPerPage)+1-$scope.resultPerPage); 
+                                i < ($scope.currentPage*$scope.resultPerPage) && i < $scope.allFilteredContents.length ; i++){
+                            $scope.contents.push($scope.allFilteredContents[i]);
+                        }
+                    }
+                }
+                $scope.goSearch1 = function(lib){
+                    //console.log('--**--'+lib);
+                    if(lib != null && lib != '')
+                        $scope.selectedLib = lib
+                    else
+                        $scope.selectedLib = 'PERSONAL_WORKSPACE';
+                    $scope.goSearch();
+                }
+                $scope.goSearch = function(){
+                    $scope.isloading = true;
+                    $scope.reset();
+                    $scope.fetchContent(true);
+                }
+                $scope.reset = function(){
+                    $scope.currentPage = 0;
+                    $scope.offSet = 0;
+                    $scope.allContents = [];
+                    $scope.allFilteredContents = [];
+                }
+                $scope.reverse = true;
+                $scope.orderBy = function(field){
+                    $scope.isloading = true;
+                    $scope.reverse = ($scope.selectedHeader === field) ? !$scope.reverse : false;
+                    $scope.selectedHeader = field;
+                    if(field == 'Title')
+                        $scope.orderList = 'title';
+                    else if(field == 'Size')
+                        $scope.orderList = 'sizeByte';
+                    else if(field == 'Author')
+                        $scope.orderList = 'authorName';
+                    else if(field == 'Rating')
+                        $scope.orderList = 'rating';
+                    else if(field == 'Last Modified')
+                        $scope.orderList = 'lastModifiedDate';
+                    else if(field == 'Publication Date')
+                        $scope.orderList = 'publicationDate';
+                    $scope.allFilteredContents = $filter('orderBy')($scope.allFilteredContents, $scope.orderList, $scope.reverse);
+                    $scope.fromOrderBy = true;
+                    $scope.next();
+                    $scope.isloading = false;
+                }
+                $scope.download = function(){
+                    var selectedIds = '';
+                    angular.forEach($scope.allFilteredContents,function(item) {
+                        if(item.isSelected && item.contentDocId != ''){
+                            if(selectedIds == '')
+                                selectedIds = item.contentDocId;
+                            else
+                                selectedIds += '/'+item.contentDocId;
+                        }
+                    });
+                    if(selectedIds != ''){
+                        window.open('/HDC/sfc/servlet.shepherd/document/download/' + selectedIds, '_self');
+                    }
+                }
+                $scope.formatFileType = function(fileType){
+                    if(fileType == 'WORD_X')
+                        return 'Word 2007';
+                    if(fileType == 'WORD_M')
+                        return 'Word 2007 Macro-Enabled';
+                    if(fileType == 'png')
+                        return 'Image - png';
+                    if(fileType == 'gif')
+                        return 'Image - gif';
+                    if(fileType == 'jpeg')
+                        return 'Image - jpeg';
+                    if(fileType == 'jpg')
+                        return 'Image - jpg';
+                    if(fileType == 'UNKNOWN')
+                        return 'unknown';
+                    if(fileType == 'EXCEL_X')
+                        return 'Excel 2007';
+                    if(fileType == 'RTF')
+                        return 'Rich Text Format';
+                    if(fileType == 'MP4')
+                        return 'Video';
+                    if(fileType == 'TEXT')
+                        return 'Plain Text';
+                    if(fileType == 'PDF')
+                        return 'Adobe PDF';
+                    if(fileType == 'POWER_POINT')
+                        return 'Powerpoint';
+                    return fileType;
+                }
+                $scope.getStyleClass = function(fileExt, fileType){
+                    var iconClass = '';
+                    //console.log('Checking file extension and file types :::::::::::: ' + fileExt + '    ' + fileType);
+                    if(fileExt == 'docm' && (fileType == 'WORD_X' || fileType == 'WORD_M'))
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_word_16';
+                    else if(fileExt == 'png' || fileExt == 'jpeg' || fileExt == 'gif' || fileExt == 'jpg')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_image_16';                                     
+                    else if(fileExt == 'pdf')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_pdf_16';
+                    else if(fileExt == 'mp3' || fileExt == 'wav')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_audio_16';
+                    else if(fileExt == 'txt')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_txt_16';
+                    else if(fileExt == 'mp4')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_mp4_16';
+                    else if(fileExt == 'csv')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_csv_16';
+                    else if(fileExt == 'zip')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_zip_16';
+                    else if(fileExt == 'xml')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_xml_16';
+                    else if(fileExt == 'rtf')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_rtf_16';
+                    else if(fileExt == 'html')
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_html_16';
+                    else if(fileExt == 'ppt' && (fileType == 'POWER_POINT' || fileType == 'POWER_POINT_X'))
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_ppt_16';
+                    else if(fileExt == 'xlsx' && (fileType == 'EXCEL' || fileType == 'EXCEL_X'))
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_excel_16';
+                    else 
+                        iconClass = 'docIcon_16 docIcon sprite-doctype_unknown_16';
+                    //console.log('Selected iconClass:::::::::::: ' + iconClass);
+                    return iconClass;
+                }
+                $scope.getFileSize = function(ContentSize){
+                    var size = '';
+                    if(ContentSize < 1024){
+                        size = ContentSize.toFixed(0) +' B';
+                    }
+                    else if (ContentSize >= 1024 && ContentSize < 1048576) {
+                        size = (ContentSize/1024).toFixed(0) +' KB';
+                    }
+                    else {
+                        size = (ContentSize/1048576).toFixed(1) + ' MB';
+                    }
+                    return size;
+                }
+                //create filters
+                $scope.createFilters = function(){
+                    
+                    $scope.filters = {};
+                    //console.log('in filters');
+                    angular.forEach($scope.allFilteredContents,function(item) {
+                        item.iconClass = $scope.getStyleClass(item.fileExt, item.fileType);
+                        //console.log('item.iconClass:::: ' + item.title);
+                        item.fileType = $scope.formatFileType(item.fileType);
+                        item.size = $scope.getFileSize(item.sizeByte);
+                        angular.forEach(item.customFields,function(field) {
+                            if(field.value != null && field.value != '') {
+                                var filter = angular.copy($scope.filter);
+                                if(Object.keys($scope.filters).indexOf(field.name) < 0) {
+                                    filter.name = field.name;
+                                    filter.label = field.label;
+                                }
+                                else{
+                                    filter = $scope.filters[field.name];
+                                }
+                                if(filter.count < 30) {
+                                    if(field.selectedEntries.length > 0){
+                                        angular.forEach(field.selectedEntries,function(entry) {
+                                            if(filter.count < 30) {
+                                                $scope.addValues(filter,entry,entry);
+                                            }
+                                        });
+                                    }
+                                    else{
+                                        $scope.addValues(filter,field.value,field.value);
+                                    }
+                                    $scope.filters[field.name] = filter;  
+                                }
+                                if($scope.filterList.indexOf(field.name) < 0 && field.name != 'Language')
+                                    $scope.filterList.push(field.name);
+                            }
+                        });
+                        if(item.libraryId != '' && Object.keys($scope.libMap).length > 0) {
+                            var filter = angular.copy($scope.filter);
+                            if(Object.keys($scope.filters).indexOf('library') < 0) {
+                                filter.name = 'library';
+                                filter.label = 'My Libraries';
+                            }
+                            else{
+                                filter = $scope.filters['library'];
+                            }
+                            if(filter.count < 30) {
+                                $scope.addValues(filter,item.libraryId,$scope.libMap[item.libraryId]);
+                                $scope.filters['library'] = filter;  
+                            }
+                        }
+                        if(item.authorId != '') {
+                            var filter = angular.copy($scope.filter);
+                            if(Object.keys($scope.filters).indexOf('authorId') < 0) {
+                                filter.name = 'authorId';
+                                filter.label = 'Authors';
+                            }
+                            else{
+                                filter = $scope.filters['authorId'];
+                            }
+                            if(filter.count < 30) {
+                                $scope.addValues(filter,item.authorId,item.authorName);
+                                $scope.filters['authorId'] = filter;
+                            }
+                        }
+                        if(item.fileExt != ''){
+                            
+                            var filter = angular.copy($scope.filter);
+                            if(Object.keys($scope.filters).indexOf('fileExt') < 0) {
+                                filter.name = 'fileExt';
+                                filter.label = 'File Formats';
+                            }
+                            else{
+                                filter = $scope.filters['fileExt'];
+                            }
+                            if(filter.count < 30) {
+                                $scope.addValues(filter,item.fileType,item.fileType);
+                                $scope.filters['fileExt'] = filter;
+                            
+                            }
+                        }
+                        if(item.tags != null && item.tags.length > 0) {
+                            var filter = angular.copy($scope.filter);
+                            if(Object.keys($scope.filters).indexOf('tags') < 0) {
+                                filter.name = 'tags';
+                                filter.label = 'Tags';
+                            }
+                            else{
+                                filter = $scope.filters['tags'];
+                            }
+                            if(filter.count < 30) {
+                                angular.forEach(item.tags,function(tag) {
+                                    
+                                    if(tag != '' && filter.count < 30) {
+                                        $scope.addValues(filter,tag,tag);
+                                    }
+                                });
+                                $scope.filters['tags'] = filter;
+                            }
+                        }
+                    });
+                    if(Object.keys($scope.filters).length > 0)
+                        $scope.isFilterPresent = true;
+                    else
+                        $scope.isFilterPresent = false;
+                    angular.forEach($scope.filters,function(filterObj, filterName) {
+                        if(Object.keys(filterObj.values2).length > 0){
+                            var line = parseInt(Object.keys(filterObj.values2).length/5) + ((Object.keys(filterObj.values2).length % 5) > 0 ? 1 : 0);
+                            for(var i=1; i <=line;i++)
+                                filterObj.lines.push(i);
+                            filterObj.moreValues = Object.keys(filterObj.values2);
+                        }
+                    });
+                    $scope.filterList = $filter('orderBy')($scope.filterList, '', false);
+                    $scope.filterList.push('tags');
+                    $scope.filterList.push('fileExt');
+                    $scope.filterList.push('authorId');
+                    $scope.filterList.push('library');
+                    $scope.filterList.push('Language');
+                }
+                $scope.getNumber = function(num) {
+                    return new Array(num);   
+                }
+                
+                $scope.addValues = function(filter, key, value){
+                    var objTemp = angular.copy($scope.obj);
+                    objTemp.name = value;
+                    if(Object.keys(filter.values).indexOf(key) < 0 && Object.keys(filter.values2).indexOf(key) < 0){
+                        objTemp.size = 1;
+                        if(Object.keys(filter.values).length < 5)
+                        filter.values[key] = objTemp;
+                        else
+                            filter.values2[key] = objTemp;
+                    }else {
+                        if(Object.keys(filter.values).indexOf(key) >= 0){
+                            objTemp.size = filter.values[key].size + 1;
+                            filter.values[key] = objTemp;
+                        }
+                        else {
+                            objTemp.size = filter.values2[key].size + 1;
+                            filter.values2[key] = objTemp;
+                        }
+                    }
+                    filter.count = Object.keys(filter.values).length + Object.keys(filter.values2).length;
+                    return filter;
+                }
+                $scope.clear = function(){
+                    $scope.appiledFilters = [];
+                    $scope.isloading = true;
+                    angular.forEach($scope.filters,function(filterObj, filterName) {
+                        filterObj.selectedValues = [];
+                        angular.forEach(filterObj.values,function(tag) {
+                            tag.isSelected = false;
+                        });
+                        angular.forEach(filterObj.values2,function(tag) {
+                            tag.isSelected = false;
+                        });
+                    });
+                    $scope.allFilteredContents = angular.copy($scope.allContents);
+                    $scope.resetContent();
+                    $scope.isloading = false;
+                }
+                $scope.clearAll = function(){
+                    $scope.inputText = '';
+                    $scope.selectedLang = '';
+                    $scope.appiledFilters = [];
+                    if($scope.libraries.length > 1)
+                        $scope.selectedLib = 'ALL_WORKSPACES';
+                    else
+                        $scope.selectedLib = 'PERSONAL_WORKSPACE';
+                    $scope.goSearch();
+                }
+                $scope.removeHtmlEscaping = function(str){
+                        return str.replace(/&/g, "")
+                                  .replace(/quot;/g, '"')
+                                  .replace(/#39;/g, "'")
+                                  .replace(/lt;/g, '<')
+                                  .replace(/gt;/g, '>');                                
+                }   
+                $scope.filterContents = function(filter, selectedvalue, label, isCheck){
+                    $scope.isloading = true;
+                    var obj = angular.copy($scope.appFilter);
+                    obj.name = selectedvalue;
+                    obj.filter = filter;
+                    obj.label = label;
+                    if(isCheck){
+                        if($scope.filters[filter].selectedValues.indexOf(selectedvalue) < 0){
+                            $scope.filters[filter].selectedValues.push(selectedvalue);
+                            $scope.appiledFilters.push(obj);
+                            angular.forEach($scope.filters[filter].values,function(tag) {
+                                if(tag.name == selectedvalue)
+                                    tag.isSelected = true;
+                            });
+                            angular.forEach($scope.filters[filter].values2,function(tag) {
+                                if(tag.name == selectedvalue)
+                                    tag.isSelected = true;
+                            });
+                        }
+                    }else {
+                        $scope.filters[filter].selectedValues.splice($scope.filters[filter].selectedValues.indexOf(selectedvalue),1);
+                        var index = 0;
+                        for(var i = 0;i<$scope.appiledFilters.length;i++){
+                            if($scope.appiledFilters[i].name == selectedvalue && $scope.appiledFilters[i].filter == filter)
+                                index = i;
+                        }
+                        $scope.appiledFilters.splice(index,1);
+                        angular.forEach($scope.filters[filter].values,function(tag) {
+                            if(tag.name == selectedvalue)
+                                tag.isSelected = false;
+                        });
+                        angular.forEach($scope.filters[filter].values2,function(tag) {
+                            if(tag.name == selectedvalue)
+                                tag.isSelected = false;
+                        });
+                    }
+                    var tempContentList = [];
+                    angular.forEach($scope.allContents,function(item) {
+                        var present = true;
+                        angular.forEach($scope.filters,function(filterObj, filterName) {
+                            if(filterName == 'tags'){
+                                angular.forEach(filterObj.selectedValues,function(tag) {
+                                    if(item.tags.indexOf(tag) < 0){
+                                        present = false;
+                                    }
+                                });
+                            }
+                            else if(filterName == 'fileExt'){
+                                if(filterObj.selectedValues.length > 0 && filterObj.selectedValues.indexOf(item.fileType) < 0){
+                                    present = false;
+                                }
+                            }
+                            else if(filterName == 'authorId'){
+                                if(filterObj.selectedValues.length > 0 && filterObj.selectedValues.indexOf(item.authorId) < 0){
+                                    present = false;
+                                }
+                            }
+                            else if(filterName == 'library'){
+                                if(filterObj.selectedValues.length > 0 && filterObj.selectedValues.indexOf(item.libraryId) < 0){
+                                    present = false;
+                                }
+                            }
+                            else {
+                                angular.forEach(item.customFields,function(field) {
+                                    if(field.name == filterName) {
+                                        if(filterObj.selectedValues.length > 0){
+                                            if(field.selectedEntries.length > 0){
+                                                var atleastOne = false;
+                                                angular.forEach(filterObj.selectedValues,function(tag) {
+                                                    if(field.selectedEntries.indexOf(tag) >= 0){
+                                                        atleastOne = true;
+                                                    }
+                                                });
+                                                if(!atleastOne)
+                                                    present = false;
+                                            }
+                                            else if(filterObj.selectedValues.indexOf(field.value) < 0){
+                                                present = false;
+                                            }
+                                        } 
+                                    }
+                                });
+                            }
+                        });
+                        if(present)
+                            tempContentList.push(item);
+                    });
+                    $scope.allFilteredContents = angular.copy(tempContentList);
+                    //console.log($scope.allFilteredContents);
+                    $scope.resetContent();
+                    $scope.isloading = false;
+                }
+                $scope.resetContent = function(){
+                    $scope.currentPage = 0;$scope.totalPage = parseInt($scope.allFilteredContents.length/$scope.resultPerPage);
+                    $scope.totalPage = (parseInt($scope.allFilteredContents.length%$scope.resultPerPage) > 0 ? $scope.totalPage + 1 : $scope.totalPage);
+                    $scope.next();
+                }
+                $scope.selectAll = function(){
+                    angular.forEach($scope.allFilteredContents,function(item) {
+                        item.isSelected = $scope.allSelected;
+                    });
+                }
+                $scope.complete = function(textstr){
+                    $scope.isloading = true;
+                    $scope.displayOptions = {};
+                    $scope.headerValues = [];
+                    //get display options
+                    $scope.getDisplayOption().then(function(result){
+                        $scope.displayOptions = angular.copy(result);
+                        angular.forEach($scope.displayOptions.displayHeader,function(name) {
+                            $scope.headerValues.push(name.trim());
+                        });
+                        $scope.resultPerPage = $scope.displayOptions.resultPerPage;
+                        //console.log($scope.displayOptions);
+                        $scope.isloading = false;
+                        $scope.resetContent();
+                        $scope.showDisplayOptions = false;
+                    });
+                }
+            });
+            function closeWindow() {
+                var scope = angular.element(document.getElementById("MainWrap")).scope();
+                scope.$apply(function () {
+                    scope.complete();
+                });
+            }
+            function toggleItem(){
+                var cbs = jQuery('.singleSelect');
+                if(cbs.filter(':not(:checked)').length==0){
+                    jQuery("#selectAll").prop('checked', true);
+                }else{
+                    jQuery("#selectAll").prop('checked', false);
+                }
+            }
+        </script>
+        
+        <body ng-app="contentApp" ng-cloak="ng-cloak" class="slds">
+            <div id="MainWrap" ng-controller="contentCon" ng-init="intialFunction();" style="min-height: 822px;">
+                <div style="width:100%;border:0;" id="mainDivId">
+                    <!-- Left Div -->
+                    <div style="float: left;width:17%;"> 
+                        <apex:include pageName="ContentFilters"/>
+                    </div>
+                    <!-- Right Div -->
+                    <div style="float: left;padding-left: 10px;width:82%;">  
+                        <apex:include pageName="ContentBlock"/>
+                    </div>
+                </div>
+                <div ng-show="showDisplayOptions">
+                    <div role="dialog" tabindex="-1" aria-labelledby="header43" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <div class="slds-modal__content slds-p-around--medium" style="padding:0 !important;">
+                                <apex:include pageName="ContentDisplayOptions" id="displayOption"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-backdrop slds-backdrop--open"></div>
+                </div>
+                <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                   <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />
+                </div>
+            </div>
+        </body>
+    </html>
+</apex:page>

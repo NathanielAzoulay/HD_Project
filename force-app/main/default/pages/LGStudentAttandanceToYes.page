@@ -1,0 +1,10 @@
+<apex:page action="{!doUpdate}" standardController="LG_Student_Attendance__c" recordSetVar="LGSAttendances" extensions="LGStudentAttandanceToYesCtr">
+
+    <script>        
+        if('{!message2display}' != ''){
+            alert('{!message2display}'); // if an error occur.
+        }
+        window.location.href = '{!$CurrentPage.parameters.RetURL}';        
+    </script>
+      
+</apex:page>

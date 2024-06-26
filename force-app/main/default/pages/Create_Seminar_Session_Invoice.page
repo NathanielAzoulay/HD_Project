@@ -1,0 +1,221 @@
+<apex:page id="thePage" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="true" sidebar="false" showHeader="false" standardController="Seminar__c" extensions="Create_Seminar_Session_Invoice_Ctl" >
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/jquery-1.8.2.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/postmessage/jquery.ba-postmessage.js')}"/>
+
+        <script type="text/javascript">
+            var j$ = jQuery.noConflict();
+    
+            var parent_domain = '{!$CurrentPage.parameters.parent_domain}';
+    
+            j$(document).ready(function() {
+                j$('input[id$=btnCloseModalDialog]').click(function(event) {
+                    event.preventDefault();
+                    closeModalDialog();
+                });
+            });
+            
+            function closeModalDialog() {
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog';
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                ); 
+            }
+            
+            function closeModalDialogAndRedirect() {
+                var redirectUrl = j$('input[id$=redirectUrl]').val();
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog_redirect';
+                cross_result.redirect_url = redirectUrl;
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                );
+            }
+        </script>
+        <style>
+            .bootstrap-sf1 input[type=date], .bootstrap-sf1 input[type=datetime-local], .bootstrap-sf1 input[type=month], .bootstrap-sf1 input[type=time] {
+                line-height: inherit !important;
+            }
+            body{
+                background-color: rgba(0, 0, 0, 0);
+            }
+        </style>
+    </head>
+    
+    <link href="{!URLFOR($Resource.Bootstrap4SW, 'css/bootstrap-namespaced.min.css')}" rel="stylesheet"/> 
+    
+    <div class="bootstrap-sf1" style="background: transparent!important;"> 
+        <apex:outputPanel id="FailurePanel" layout="none" >        
+            <apex:outputPanel rendered="{!NOT(ISBLANK(showException))}" >
+                
+                <div class="col-md-4 text-center">
+                    
+                    <div class="alert alert-error" role="alert">
+                        <p>There was an error. If the problem persists, please contact the system administrator <br/> 
+                           <br/> 
+                           <span style="color:red;">{!showException}</span>
+                           <br/>
+                           <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button> 
+                        </p>
+                        
+                    </div>
+                    
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="ErrorPanel" layout="none" >        
+            <apex:outputPanel rendered="{!NOT(ISBLANK(showError))}">        
+                
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-error" role="alert">
+                        <p>
+                           <span style="color:red;">{!showError}</span>
+                           <apex:outputPanel rendered="{! !showForm }">
+                               <br/><br/>
+                               <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="if( '{! showForm }' == 'true' ){closeErrorMsg();}else{closeModalDialog();}">Close</button> 
+                           </apex:outputPanel>
+                        </p>
+                        
+                    </div>
+                    
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="SuccessPanel" layout="none" >        
+            <apex:outputPanel rendered="{!showDone}">        
+                <br/>
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-info" role="alert"><p>The action was submitted, refresh your list.</p></div>
+                    <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="needInformationPanel" layout="none" >
+            <!--<apex:pageMessages />-->
+            <apex:outputPanel rendered="{!showForm}">
+                
+                <apex:form id="theForm" >
+                    <apex:actionFunction action="{!doContinue}" name="doContinueJS" status="progressStatus" reRender="SuccessPanel,ErrorPanel,FailurePanel,needInformationPanel">
+                        <apex:param name="newSession" assignTo="{!newSession}" value="" />
+                    </apex:actionFunction>
+                    
+                    <apex:actionFunction action="{!RetrieveSeminarSession}" name="RetrieveSeminarSessionJS" status="progressStatus" reRender="SuccessPanel,ErrorPanel,FailurePanel,sessionFieldSection" />
+                    
+                    <div class="col-md-4 text-left">  
+                        <div class="alert alert-warning" role="alert">
+                            <!--
+                            {!$CurrentPage.parameters.ids}
+                            -->
+                            <input type="radio" id="radiocreate" name="session" onclick="enabledisableSessionLookup(true);" value="create" checked="checked"><label for="radiocreate" >Create new Seminar Session</label></input><br/>
+                            
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <input type="radio" id="radioadd" name="session" onclick="enabledisableSessionLookup(false);" value="add"><label for="radioadd">Add to existing Seminar Session</label></input><br/>
+                                </div>
+                                <div class="col-xs-6">
+                                    <apex:inputField id="sessionLookup" onchange="RetrieveSeminarSessionJS();" value="{! dummySeminar.Hidden_Seminar_Session_Filtered__c}" />
+                                </div>
+                            </div>
+                            
+                            <br/>
+                            
+                            <apex:outputPanel id="sessionFieldSection" >
+                                <script>
+                                    if( '{! dummySeminar.Hidden_Seminar_Session_Filtered__c != null }' == 'true'  ){
+                                        enabledisableSessionLookup(false);
+                                    }
+                                </script>
+                                
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <p class="text-right" >
+                                            <apex:outputLabel value="Seminar Session Number" ></apex:outputLabel>
+                                        </p>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <apex:inputField id="sessionName" value="{! dummySession.Name }" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <p class="text-right" >
+                                            <apex:outputLabel value="Invoice Amount" ></apex:outputLabel>
+                                        </p>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <apex:inputField value="{! dummySession.Invoice_Amount__c}" />
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <p class="text-right" >
+                                            <apex:outputLabel value="Due by Date" ></apex:outputLabel>
+                                        </p>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <apex:inputField value="{! dummySession.Due_By_Date__c}" />
+                                    </div>
+                                </div>
+                                
+                            </apex:outputPanel>
+                        </div>
+                        <div class="col-md-4 text-center"> 
+                            <apex:actionStatus id="progressStatus">
+                                <apex:facet name="start">
+                                    <apex:outputPanel layout="inline"> 
+                                        <img height="16" width="16" src="/img/loading.gif" />
+                                    </apex:outputPanel>
+                                </apex:facet>
+                                <apex:facet name="stop" >
+                                </apex:facet>
+                            </apex:actionStatus>
+                            
+                            <apex:commandButton styleClass="btn btn-default" value="Continue" onclick="doContinue();return false;" id="btnSubmit" />
+                            <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                        </div>
+                    </div>
+                </apex:form>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+    </div>
+    
+    <script>
+        function closeErrorMsg(){
+            j$(".alert-error").parent().hide();
+        }
+        
+        function doContinue(){
+            var newSession = j$("#radiocreate")[0].checked == true;
+            doContinueJS( newSession );
+        }
+        
+        function enabledisableSessionLookup( value ){
+            var lookup = j$( "#{! $Component.thePage.theForm.sessionLookup}".replace(new RegExp(":", "g") , "\\:") );
+            var lookupIcon = j$( "#{! $Component.thePage.theForm.sessionLookup}_lkwgt".replace(new RegExp(":", "g") , "\\:") );
+            
+            lookup [0].disabled = value;
+            lookupIcon [0].hidden = value;
+            
+            var sessionName = j$( "#{! $Component.thePage.theForm.sessionName}".replace(new RegExp(":", "g") , "\\:") );
+            
+            sessionName[0].disabled = !value;
+        }
+        
+        enabledisableSessionLookup(true);
+    </script>
+    
+</apex:page>

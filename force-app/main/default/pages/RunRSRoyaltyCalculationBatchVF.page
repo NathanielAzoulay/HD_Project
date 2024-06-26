@@ -1,0 +1,16 @@
+<apex:page controller="RunRSRoyaltyCalculationBatch" lightningStylesheets="true">
+    <apex:form >
+    <apex:pageBlock title="Run Royalty Calculation">
+        <apex:pageBlockButtons location="top">
+            <apex:commandButton value="Run Batch" action="{!runBatch}" />   
+        </apex:pageBlockButtons>
+        
+        <apex:pageMessages id="showmsg"></apex:pageMessages>
+        <apex:pageBlockSection >
+            <apex:inputField value="{!con.accountId}" label="Account"/>
+            <apex:inputCheckbox value="{!reGenerate}" label="Re Generate"/>
+        </apex:pageBlockSection>
+        
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>

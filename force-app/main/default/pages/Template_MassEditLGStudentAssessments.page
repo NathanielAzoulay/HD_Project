@@ -1,0 +1,55 @@
+<apex:page standardController="LG_Student_Assessment__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="LG Student Assessment Code">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="Base Course">
+<apex:inputField value="{!a.Base_Course__c}"/>
+</apex:column>
+<apex:column headerValue="Assessment Name">
+<apex:inputField value="{!a.Assessment_Name__c}"/>
+</apex:column>
+<apex:column headerValue="Test Type">
+<apex:inputField value="{!a.Test_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Student Name">
+<apex:inputField value="{!a.Student_Name__c}"/>
+</apex:column>
+<apex:column headerValue="Assessment Date">
+<apex:inputField value="{!a.Assessment_Date__c}"/>
+</apex:column>
+<apex:column headerValue="Final Grade">
+<apex:inputField value="{!a.Final_Grade__c}"/>
+</apex:column>
+<apex:column headerValue="Listening Grade">
+<apex:inputField value="{!a.Listening_Grade__c}"/>
+</apex:column>
+<apex:column headerValue="Reading Grade">
+<apex:inputField value="{!a.Reading_Grade__c}"/>
+</apex:column>
+<apex:column headerValue="Speaking Grade">
+<apex:inputField value="{!a.Speaking_Grade__c}"/>
+</apex:column>
+<apex:column headerValue="Writing Grade">
+<apex:inputField value="{!a.Writing_Grade__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

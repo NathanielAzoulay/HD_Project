@@ -1,0 +1,184 @@
+<apex:page controller="GrantOrRemoveSharingFromCST" sidebar="false" id="pg">
+<apex:slds />
+<style>
+    .slds-table thead th{
+        padding:0px !important;
+    }
+</style>
+<script>
+    function checkAll(ele){
+        var checkboxes = document.getElementsByClassName('slds-checkbox');
+        if (ele.checked){
+            for (var i = 0; i < checkboxes.length; i++){
+                if (checkboxes[i].type == 'checkbox') {
+                    checkboxes[i].checked = true;
+                }
+            }
+        }else{
+                for (var i = 0; i < checkboxes.length; i++){
+                    
+                    if(checkboxes[i].type == 'checkbox'){
+                        checkboxes[i].checked = false;
+                    }
+                }
+             }
+    }
+    
+    
+    
+    function hideSpinner(){
+        document.getElementById('loadingImageIcon').style.display = 'none';  
+        document.getElementById("downArrow").style.display = "none";
+    }
+    
+    function sortTable(field, fieldType){
+        console.log('field '+field);
+        if(fieldType != 'multipicklist'){
+            document.getElementById('loadingImageIcon').style.display = '';  
+            var sortDirection = "{!directionOfSort}";
+            var sortedBy = "{!sortingExpression}";
+            if(sortedBy ==field){
+                sortDirection = sortDirection == 'ASC' ? 'DESC' : 'ASC';
+            }else{
+                sortDirection = 'ASC';
+            }
+            document.getElementById('pg:OP:sortingExpression').value = field;
+            document.getElementById('pg:OP:directionOfSort').value = sortDirection;
+            sortTableByColumn(); 
+        }      
+    }
+</script>
+<apex:form id="OP">
+<apex:inputHidden value="{!sortingExpression}" id="sortingExpression"/>
+<apex:inputHidden value="{!directionOfSort}" id="directionOfSort" />
+
+<apex:actionFunction name="callGrantOrReemoveShare" action="{!grantOrRemoveSharing}"/>
+
+<apex:actionFunction name="sortTableByColumn" action="{!sortTableByDirection}" >
+</apex:actionFunction>
+    <!-- SPINNER -->
+        <div id="loadingImageIcon" class="demo-only" style="display: none;">
+            <div class="slds-spinner_container slds-is-fixed">
+                <div role="status"
+                    class="slds-spinner slds-spinner_brand slds-spinner_large">
+                    <span class="slds-assistive-text">Loading</span>
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+            </div>
+        </div>
+    <!-- SPINNER -->
+    <div class="slds-align_absolute-center">
+        <div class="slds-p-around_small">
+            <div class="slds-button-group" role="group">
+                <button class="slds-button slds-button_brand" onclick="callGrantOrReemoveShare(); return false;">Save</button>
+                <!--<button class="slds-button slds-button_neutral">Return</button> -->
+                <apex:commandButton value="Return" action="{!returnMethod}" styleClass="slds-button slds-button_neutral"/>
+            </div> 
+        </div>
+    </div>
+    <article class="slds-card">
+  <div class="slds-card__header slds-grid">
+    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+      <div class="slds-media__figure">
+        <span class="slds-icon_container slds-icon-standard-contact" title="description of icon when needed">
+          <svg class="slds-icon slds-icon_small" aria-hidden="true">
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, '/assets/icons/standard-sprite/svg/symbols.svg#contact')}" />
+          </svg>
+        </span>
+      </div>
+      <div class="slds-media__body">
+        <h2>
+          
+            <span class="slds-text-heading_small">Sub-Franchisees</span>
+          
+        </h2>
+      </div>
+    </header>
+    
+  </div>
+  <div class="slds-card__body">
+    <table class="slds-table slds-table_bordered slds-table_cell-buffer" role="grid">
+        <thead>
+            <tr class="slds-text-title_caps">
+                <th  role="gridcell" class="slds-text-align_right " style="width:3.25rem;padding-left: 20px;padding-right: 8px">
+                    <div class="slds-th__action" style="padding-left: 20px;">
+                        <span class="slds-checkbox">
+                            <input type="checkbox" name="options" id="checkbox_all" onchange="checkAll(this)"/>
+                            <label class="slds-checkbox__label" for="checkbox_all">
+                                <span class="slds-checkbox_faux"></span>
+                                <span class="slds-form-element__label slds-assistive-text">Select All</span>
+                            </label>
+                        </span>
+                    </div>
+                </th>
+                
+                <apex:repeat value="{!fields}" var="field">
+                   <!-- <th scope="col">
+                        <div class="slds-truncate" title="{!field.Label}">{!field.Label}</div>
+                    </th>  -->
+                    <th  class="slds-is-sortable  slds-text-title_caps {!IF(field.fieldPath==sortingExpression,IF(directionOfSort=='ASC','slds-is-sorted','slds-is-sorted'),'')} "  scope="col" >
+                    <div class="slds-th__action slds-th__action_form" tabindex="0" id="{!directionOfSort+field.fieldPath}" onclick="sortTable('{!field.fieldPath}','{!field.type }')" style="cursor:pointer; width:100%;">
+                        <span class="slds-assistive-text">Sort </span>
+                        <div class="slds-truncate wrap-content-slds" style="width:100%">
+                            <div class="slds-truncate" title="{!field.Label}">{!field.Label} </div>
+                        </div>
+                        <apex:outputPanel layout="none"  rendered="{!(field.fieldPath == sortingExpression) }">
+                             <apex:outputPanel layout="none" rendered="{!IF(directionOfSort == 'ASC',true,false)}">
+                                <span class="slds-icon_container" style="width:20px;" id="downArrow">
+                                    <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                                       <use  href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#arrowup')}"></use>
+                                    </svg>
+                            </span>
+                           </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!IF(directionOfSort == 'DESC',true,false)}">
+                                
+                                <span class="slds-icon_container" style="width:20px;" id="downArrow">
+                                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                                           <use  href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#arrowdown')}"></use>
+                                        </svg>
+                                </span>
+                            </apex:outputPanel>
+                         </apex:outputPanel>
+                         <apex:outputPanel layout="none"  rendered="{!(field.fieldPath != sortingExpression) }">
+                             <span class="slds-icon_container" style="width:20px;" id="downArrow">
+                                    <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                                       <use  href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#arrowup')}"></use>
+                                    </svg>
+                            </span>
+                         </apex:outputPanel>
+                        <span class="slds-assistive-text" aria-live="assertive" aria-atomic="true"></span>
+                    </div>
+                    </th>  
+                </apex:repeat>
+            </tr>
+        </thead>
+        
+        <tbody>
+            <apex:repeat value="{!WrapperClassList}" var="subFranchisee">
+            <tr>
+                <td class="slds-text-align_right" role="gridcell" style="width:3.25rem;padding-left: 20px;padding-right: 8px">
+                    
+                    <div class="slds-form-element">
+                        <label class="slds-checkbox">
+                            <apex:inputCheckbox styleClass="slds-checkbox" value="{!subFranchisee.isChecked}"/>
+                            <span class="slds-checkbox--faux"></span>             
+                            <span class="slds-form-element__label"></span>    
+                        </label>
+                    </div>     
+                </td>
+                <apex:repeat value="{!fields}" var="field">
+                    <td data-label="{!subFranchisee.subFranchisee[field]}">
+                        <div class="slds-truncate" title="{!subFranchisee.subFranchisee[field]}"><apex:outputField value="{!subFranchisee.subFranchisee[field]}" /></div>
+                    </td>    
+                </apex:repeat>
+            </tr>        
+            </apex:repeat>
+        </tbody>
+        
+    </table>
+  </div>
+  
+</article>
+</apex:form>  
+</apex:page>

@@ -1,0 +1,6 @@
+<apex:page StandardController="Contact" extensions="Family_Parents_Action_Controller">
+ <script language="JavaScript">
+        //close();
+        window.top.location.href = '{!$Site.prefix}/' + "{!conId}";
+    </script>
+</apex:page>

@@ -1,0 +1,31 @@
+<apex:page controller="RS_VFC_CourseSubTypesShringReport"  standardStylesheets="false" sidebar="false"  readOnly="true" contentType="application/vnd.ms-excel#CourseSharing.xls">
+    
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+</head>
+
+ 
+ 
+  <table border="0" >
+      <tr >
+       <td ><b>Course Sub Types</b></td>
+      <td><b>User Name</b></td>
+      <td><b>Account Name</b></td>
+      <td><b>Email</b></td>
+    </tr> 
+   <apex:repeat value="{!viewMap}" var="CS">
+     <apex:repeat value="{!viewMap[CS]}" var="User">
+           <tr >
+               <td >{!CS.Name}</td>
+              <td>{!User.Name}</td>
+              <td>{!User.Contact.Account.Name}</td>
+              <td>{!User.Email}</td>
+           </tr> 
+         </apex:repeat>
+      </apex:repeat>
+  </table>
+ 
+
+     
+ 
+</apex:page>

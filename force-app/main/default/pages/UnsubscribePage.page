@@ -1,0 +1,73 @@
+<apex:page controller="UnsubscribeController" showHeader="false">
+    <html>
+        <head>
+            <title>Untitled Document</title>
+            <style>
+                body, a, h1, h2, h3, li, ul, div, border, p {
+                    margin: 0px;
+                    padding-top: px;
+                    padding-right: px;
+                    padding-left: px;
+                    padding-bottom: px;
+                    text-align: left;
+                    }
+                
+                #warper {
+                    width: 100%;
+                    margin-right: AUTO;
+                    margin-left: auto;
+                }
+                #warper #bg {
+                    width: 1012px;
+                    height: 657px;
+                    margin-right: AUTO;
+                    margin-left: auto;
+                    background-image: url({!$Resource.Background});
+                    padding-top:44px;
+                    padding-left:44px;
+                
+                }#warper #bg h1 {
+                    font-family: Futura Md BT; color:#001C58;
+                    padding-bottom: 10px;
+                    font-size: 2em !important;
+                }
+                .error{
+                    width: 1012px;
+                    margin-right: AUTO;
+                    margin-left: auto;
+                }
+                .BUTTON {
+                    width: 121px;
+                    height: 41px;
+                    background: url({!$Resource.UnsubscribeButton}) !important;
+                    border: 0px !important;
+                    border-radius: 3px !important;
+                    font-family: Futura Md BT !important; color:#001C58 !important;
+                }
+                p {
+                    font-family: Futura Lt BT; color:#001C58;
+                    font-size: 25px; 
+                } 
+            </style>
+        </head>
+        <apex:outputPanel layout="block" id="errorPanelId" styleClass="error">
+            <apex:pageMessages id="pgmsg"/>
+        </apex:outputPanel>
+        <body>
+            <apex:form id="pageBlockId" rendered="{!IF(OR(isShowAllMarkettingUnsbcribe,isShowAllLGUnsbcribe), true, false)}">
+                <div id="warper">
+                    <div id="bg">
+                        <h1>Dont leave!</h1>
+                        <apex:outputPanel rendered="{!isShowAllMarkettingUnsbcribe}">
+                            <p><apex:inputCheckbox id="unsubscribeMarketingId" value="{!unsubscribeMarketing}" label="Unsubscribe from all marketing email"></apex:inputCheckbox>  Unsubscribe from all marketing email</p><br/>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!isShowAllLGUnsbcribe}">
+                            <p><apex:inputCheckbox id="unsubscribeId" value="{!unsubscribeLG}" label="Unsubscribe from all learning group emails" ></apex:inputCheckbox> Unsubscribe from all learning group emails</p><br/>
+                        </apex:outputPanel>
+                        <apex:commandButton value="UNSUBSCRIBE" styleClass="BUTTON" action="{!submit}" reRender="pageBlockId, errorPanelId"/>
+                    </div>
+                </div>
+            </apex:form>    
+        </body>
+    </html>
+</apex:page>

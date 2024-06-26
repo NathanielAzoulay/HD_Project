@@ -1,0 +1,26 @@
+<apex:page standardController="Team_Task__c" showChat="false" >
+ 
+    
+    
+     <vs:importvisualstrap />
+        <vs:visualstrapblock >
+        <center>
+        <apex:outputText rendered="{!IF (Team_Task__c.Total_Team_Task__c !=null ,TRUE,FALSE)}"  style="font-weight:800" value="{!Team_Task__c.Done_Tasks__c} " >
+         Done Tasks : &nbsp;
+        </apex:outputText>
+        <apex:outputText rendered="{!IF (Team_Task__c.Total_Team_Task__c !=null  ,TRUE,FALSE)}"  style="font-weight:800" value="{!Team_Task__c.Progress__c} %   " >
+        &nbsp; , Progress :&nbsp; 
+        </apex:outputText>
+        </center>
+     <!--New-->
+        <vs:progressbar type="{!IF(Team_Task__c.Due_Date__c <= TODAY()+1,'danger','info')}" value="{!IF (Team_Task__c.Progress__c>0,Team_Task__c.Progress__c,5)}" rendered="{!IF (Team_Task__c.Ststus__c='New',true,false)}" />
+     <!--In Process-->
+        <vs:progressbar animated="true" type="{!IF(Team_Task__c.Due_Date__c <= TODAY()+1,'danger','info')}" value="{!IF (Team_Task__c.Progress__c>0,Team_Task__c.Progress__c,0)}" rendered="{!IF (Team_Task__c.Ststus__c='In Process',true,false)}" />
+     <!--success-->
+        <vs:progressbar type="success" value="{!IF (Team_Task__c.Progress__c>1,Team_Task__c.Progress__c,100)}" rendered="{!IF (Team_Task__c.Ststus__c='Done',true,false)}" />
+     <!--Not Started-->
+        <vs:progressbar type="{!IF(Team_Task__c.Due_Date__c <= TODAY()+1,'danger','info')}" value="{!IF (Team_Task__c.Progress__c>0,Team_Task__c.Progress__c,0)}" rendered="{!IF (Team_Task__c.Ststus__c='Not Started',true,false)}" />
+     <!-- Pending-->
+        <vs:progressbar animated="true" type="{!IF(Team_Task__c.Due_Date__c <= TODAY()+1,'danger','info')}" value="{!IF (Team_Task__c.Progress__c>0,Team_Task__c.Progress__c,0)}" rendered="{!IF (Team_Task__c.Ststus__c='Pending',true,false)}" />
+          </vs:visualstrapblock> 
+</apex:page>

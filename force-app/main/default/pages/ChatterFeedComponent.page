@@ -1,0 +1,8 @@
+<apex:page >
+	<style>
+		body.sfdcBody.apexPageInline{
+			background: none !important;
+		}
+	</style>
+	<chatter:feedWithFollowers entityId="{!$User.Id}" showHeader="true"/>
+</apex:page>

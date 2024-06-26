@@ -1,0 +1,23 @@
+.center-div {
+    text-align: center;
+    position: relative;
+}
+
+.center-div .slds-button {
+    position: absolute;
+    top: -80px;
+}
+
+:host {
+    display: block;
+    margin: 1rem;
+}
+
+.slds-box {
+    border-radius: 0.25rem;
+}
+
+.slds-text-heading_small {
+    font-size: 1.10rem;
+    font-weight: 350;
+}

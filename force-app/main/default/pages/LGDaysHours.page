@@ -1,0 +1,127 @@
+<apex:page docType="html-5.0" standardController="LG__c" extensions="LGDaysHoursController">
+
+    <apex:form >  
+       <apex:actionFunction name="DoDeleteJS" action="{!DoDelete}" rerender="pbContainer,msgs,lessonformId2" immediate="true">
+           <apex:param name="ActionId" assignto="{!ActionId}" value="" />
+       </apex:actionFunction>
+   
+       <apex:actionFunction name="DoRemoveJS" action="{!DoRemove}" rerender="pbContainer,msgs" immediate="true">
+           <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+       </apex:actionFunction>
+    
+       <apex:actionFunction action="{!doUpdateEndHour}" name="updateEndHourJS" reRender="pbContainer,msgs">
+           <apex:param name="ActionRowNumber" assignto="{!ActionRowNumber}" value="" />
+       </apex:actionFunction> 
+      
+       <apex:pageMessages id="msgs" />
+  
+       <apex:pageBlock id="pbContainer" >
+       
+             <apex:pageBlockButtons location="top" rendered="{!NOT(showPopupDone) && NOT(showPopup) && NOT(showPopupDelDone) && NOT(showPopupDel)}">
+             
+             <apex:actionStatus id="ButtonStatus">
+                <apex:facet name="stop">
+                   <apex:outputPanel >
+                      <apex:commandButton rerender="pbContainer,msgs,lessonformId,lessonformId2" status="ButtonStatus" value="Add" action="{!DoAdd}" immediate="true"
+                         rendered="{!AllowAdd}" />
+                      <apex:commandButton rerender="pbContainer,msgs,lessonformId,lessonformId2" status="ButtonStatus" value="Save" action="{!DoSave}"
+                         rendered="{!OR(AllowEdit,AllowAdd)}" disabled="{!DisableSave}" />
+                      <apex:commandButton rerender="pbContainer,msgs,lessonformId,lessonformId2" status="ButtonStatus" value="Cancel" action="{!DoCancel}" immediate="true"
+                         rendered="{!OR(AllowEdit,AllowAdd)}" disabled="{!DisableCancel}" />
+                   </apex:outputPanel>
+                </apex:facet>
+                <apex:facet name="start">
+                   <apex:outputPanel >
+                      <apex:commandButton value="Processing..." disabled="true" rendered="{!AllowAdd}" />
+                      <apex:commandButton value="Processing..." disabled="true" rendered="{!OR(AllowEdit,AllowAdd)}" />
+                      <apex:commandButton value="Processing..." disabled="true" rendered="{!OR(AllowEdit,AllowAdd)}" />
+                   </apex:outputPanel>
+                </apex:facet>
+             </apex:actionStatus>
+    
+          </apex:pageBlockButtons>
+          <apex:pageBlockTable id="pbTable" value="{!ObjectList}" var="ow" rendered="{!NOT(showPopupDone) && NOT(showPopup) && NOT(showPopupDelDone) && NOT(showPopupDel)}">
+              <apex:column headerValue="Action" width="91px" rendered="{!OR(AllowEdit,AllowDelete,AllowAdd)}">
+                <apex:outputPanel rendered="{!ISBLANK(ow.obj.Id)}">
+                   <apex:outputLink style="color: #015BA7;" styleClass="cmdLink" value="javascript:DoRemoveJS('{!JSENCODE(ow.AddedRowNumber)}');">Remove</apex:outputLink>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!!ISBLANK(ow.obj.Id)}">
+                   <apex:outputLink style="color: #015BA7;" styleClass="cmdLink"
+                      value="javascript:if (window.confirm('Are you sure?')) DoDeleteJS('{!JSENCODE(ow.obj.Id)}');" rendered="{!AllowDelete}">Del</apex:outputLink>
+                </apex:outputPanel>
+                <apex:outputPanel style="display:inline; margin: 0 2px 0 2px" rendered="{!AND(AllowEdit,AllowDelete)}"> | </apex:outputPanel>
+                <apex:outputPanel rendered="{!!ISBLANK(ow.obj.Id) && NOT(ow.IsEditMode)}">
+                    <apex:commandLink style="color: #015BA7;" styleClass="cmdLink" value="Edit" action="{!DoEdit}" immediate="true" rendered="{!AllowEdit}" rerender="pbContainer,msgs">
+                        <apex:param name="RecId" value="{!ow.obj.Id}" assignTo="{!ActionId}" />
+                    </apex:commandLink>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!!ISBLANK(ow.obj.Id) && ow.IsEditMode}">
+                    <apex:commandLink style="color: #015BA7;" styleClass="cmdLink" value="Cancel" action="{!DoCancelRow}" immediate="true" rendered="{!AllowEdit}" rerender="pbContainer,msgs">
+                        <apex:param name="RecId" value="{!ow.obj.Id}" assignTo="{!ActionId}" />
+                    </apex:commandLink>
+                </apex:outputPanel>   
+              </apex:column>
+         
+              <apex:repeat value="{!$ObjectType.LG_Days_Hours__c.FieldSets.Days_Hour_section}" var="f">
+                  <apex:column width="200">
+                       <apex:facet name="header">
+                          <span>{!f.Label}</span>
+                       </apex:facet>
+                       <apex:variable value="{!f=='Lesson_Length__c'}" var="isFormula"/>
+                       <apex:variable value="{!false && f=='End_Hour__c'}" var="isReadOnly"/>
+                       <apex:outputPanel >
+                          <apex:outputField value="{!ow.obj[f]}" rendered="{!(NOT(ow.IsEditMode) || isReadOnly) && NOT(isFormula)}" />     
+                          <apex:outputText value="{!ow.obj[f]}" rendered="{!isFormula && NOT(ow.IsEditMode)}" />
+                          <!--<apex:outputText value="{!DefaultFormulaMap[f]}" rendered="{!isFormula}" />-->
+                          <apex:InputField value="{!ow.obj[f]}" rendered="{!ow.IsEditMode && NOT(isReadOnly) && NOT(isFormula)}" required="{!f.required}" onchange="{! IF(f=='Start_Hour__c', 'updateEndHourJS('+JSENCODE(ow.AddedRowNumber)+');', '') }" />
+                       </apex:outputPanel>
+                    </apex:column>
+              </apex:repeat>
+          </apex:pageBlockTable>
+          
+          <apex:pageBlockSection id="lessonformId"  title="Re-create LG Lessons" rendered="{! showPopupDone || showPopup }">
+          
+              <apex:outputPanel id="SuccessPanel" layout="none" rendered="{!showPopupDone}">        
+                    <p>The action was submitted, refresh your layout to see LG Lessons updated</p>
+                    <apex:commandButton styleClass="btn" value="Continue" action="{!closeModalDialogDone}" id="btnSubmit3" immediate="true" />
+               </apex:outputPanel>
+                
+               <apex:outputPanel id="needInformationPanel" layout="none" rendered="{!showPopup}">
+                    <p>Please enter date to start the change: <apex:inputField value="{!dummyLG.LG_Start_Date__c}"/></p> 
+                    <apex:commandButton styleClass="btn" value="Continue" action="{!doSave}" id="btnSubmit" />
+                    <apex:commandButton styleClass="btn" value="Cancel" action="{!closeModalDialog}" id="btnSubmit2" immediate="true" />
+               </apex:outputPanel> 
+               
+               <Style>
+                  .datePicker{
+                      top: 0px !important;                  
+                  }
+              </style>
+               
+           </apex:pageBlockSection>
+           
+           <apex:pageBlockSection id="lessonformId2"  title="Delete LG Lessons" rendered="{! showPopupDelDone || showPopupDel }">
+              <apex:outputPanel id="SuccessPanel2" layout="none" rendered="{!showPopupDelDone}">        
+                    <p>The action was submitted, refresh your layout to see LG Lessons updated</p>
+                    <apex:commandButton styleClass="btn" value="Continue" action="{!closeModalDelDialogDone}" id="btnSubmit3" immediate="true" />
+               </apex:outputPanel>
+                
+               <apex:outputPanel id="needInformationPanel2" layout="none" rendered="{!showPopupDel}">
+                    <p>Please enter date to start the delete: <apex:inputField value="{!dummyLG.LG_Start_Date__c}"/></p> 
+                    <apex:commandButton styleClass="btn" value="Continue" action="{!doDelete}" id="btnSubmit" />
+                    <apex:commandButton styleClass="btn" value="Cancel" action="{!closeModalDelDialog}" id="btnSubmit2" immediate="true" />
+               </apex:outputPanel> 
+               <Style>
+                  .datePicker{
+                      top: 0px !important;                  
+                  }
+              </style>
+           </apex:pageBlockSection>
+      </apex:pageBlock>
+  </apex:form>
+  <script>
+    window.onload = function(){
+        window.scrollTo(0,0);
+    };
+  </script> 
+</apex:page>

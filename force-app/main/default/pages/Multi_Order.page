@@ -1,0 +1,240 @@
+<apex:page id="thePage" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="true" sidebar="false" showHeader="false" standardController="FR_Order__c" extensions="Multi_Order_Ctl" action="{!doAction}" >
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/jquery-1.8.2.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/postmessage/jquery.ba-postmessage.js')}"/>
+
+        <script type="text/javascript">
+            var j$ = jQuery.noConflict();
+    
+            var parent_domain = '{!$CurrentPage.parameters.parent_domain}';
+    
+            j$(document).ready(function() {
+                j$('input[id$=btnCloseModalDialog]').click(function(event) {
+                    event.preventDefault();
+                    closeModalDialog();
+                });
+            });
+            
+            function HideMessage( elem ){
+                j$(j$(elem).parents("div")[1]).hide();
+                var x = j$("#{!$Component.thePage.needInformationPanel}".replace(new RegExp(":", "g") , "\\:") );
+                console.log(x);
+                x.show();
+            }
+            
+            function closeModalDialog() {
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog';
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                ); 
+            }
+            
+            function closeModalDialogAndRedirect() {
+                var redirectUrl = j$('input[id$=redirectUrl]').val();
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog_redirect';
+                cross_result.redirect_url = redirectUrl;
+                
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                );
+            }
+        </script>
+        <style>
+            .bootstrap-sf1 input[type=date], .bootstrap-sf1 input[type=datetime-local], .bootstrap-sf1 input[type=month], .bootstrap-sf1 input[type=time] {
+                line-height: inherit !important;
+            }
+            body{
+                background-color: rgba(0, 0, 0, 0);
+            }
+            
+            select:disabled {
+                background-color: RGB(235, 235, 228) ;
+            }
+        </style>
+    </head>
+    
+    <link href="{!URLFOR($Resource.Bootstrap4SW, 'css/bootstrap-namespaced.min.css')}" rel="stylesheet"/> 
+    
+    <div class="bootstrap-sf1" style="background: transparent!important;">    
+        
+        <apex:outputPanel id="FailurePanel" layout="none" >        
+            <apex:outputPanel rendered="{!NOT(ISBLANK(showException))}" >
+                <br/>
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-error" role="alert">
+                        <p>There was an error. If the problem persists, please contact the system administrator <br/> 
+                           <br/> 
+                           <span style="color:red;">{!showException}</span>
+                           <br/>
+                           <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button> 
+                        </p>
+                        
+                    </div>
+                    
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="ErrorPanel" layout="none" >        
+            <apex:outputPanel rendered="{!NOT(ISBLANK(showError))}">        
+                <br/>
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-error" role="alert">
+                        <p>
+                           <span style="color:red;">{!showError}</span>
+                           <br/><br/>
+                           <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="if('{!showForm}'=='false'){closeModalDialog();}else{HideMessage(this);}">Close</button> 
+                        </p>
+                        
+                    </div>
+                    
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="SuccessPanel" layout="none" >        
+            <apex:outputPanel rendered="{!showDone}">
+                <script>
+                    top.location.href = '{!$Site.prefix}/{!selectedMultiOrder}';
+                </script>    
+                <br/>
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-info" role="alert"><p>{! $Label.HDC_Order_Open_Order_Consolidation }</p></div>
+                    <!--
+                    <div class="alert alert-info" role="alert"><p>The action was submitted, refresh your list.</p></div>
+                    -->
+                    <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+                </div>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="needInformationPanel" style="{!IF(NOT(ISBLANK(showError)),'display:none;','')}" >
+            <!--<apex:pageMessages />-->
+            <apex:outputPanel rendered="{!showForm}">
+                
+                <apex:form id="theForm">
+                    <apex:actionFunction action="{!doContinue}" name="doContinueJS" status="progressStatus" reRender="SuccessPanel,ErrorPanel,FailurePanel,needInformationPanel">
+                        <apex:param name="newMultiOrder" assignTo="{!newMultiOrder}" value="" />
+                    </apex:actionFunction>
+
+                    <apex:actionStatus id="progressStatus">
+                        <apex:facet name="start">
+                            <apex:outputPanel layout="inline"> 
+                                <img height="16" width="16" src="/img/loading.gif" />
+                            </apex:outputPanel>
+                        </apex:facet>
+                        <apex:facet name="stop" >
+                        </apex:facet>
+                    </apex:actionStatus>
+
+                    <div id="step1">
+
+                        
+                        <div class="col-md-4 text-left">
+                            <div class="alert alert-warning" role="alert">
+                                <!--
+                                {!$CurrentPage.parameters.ids}
+                                -->
+                                <input type="radio" id="radiocreate" name="multiorder" onclick="enabledisableMultiOrderLookup(true);" value="create" checked="checked"><label for="radiocreate" >{! $Label.HDC_Order_Create_new_Order_Consolidation }</label></input><br/>
+                                
+                                <apex:outputPanel layout="none" rendered="{! recordTypeName == 'FP' && priceLists.size>1 }">
+                                    <div style="padding-left:40px;" >
+                                        <!-- Price List Selection -->
+                                        <label>Available Price List:</label>
+                                        <br/>
+                                        <apex:selectList style="width:200px;" id="priceListSelection" size="1" value="{! selectedPriceList }" multiselect="false" >
+                                            <apex:selectOptions value="{! priceLists }"/>
+                                        </apex:selectList>
+                                    </div>
+                                </apex:outputPanel>
+                                
+                                <input type="radio" id="radioadd" name="multiorder" onclick="enabledisableMultiOrderLookup(false);" value="add"><label for="radioadd">{! $Label.HDC_Order_Add_to_existing_Order_Consolidation }</label></input><br/>
+                                <!--
+                                <div style="display: none;" >
+                                    <apex:inputField id="multiOrderLookup2"  value="{! dummyOrder.Ordered_By_Franchisee__c}" /><br/>
+                                    <apex:inputField id="multiOrderLookup3"  value="{! dummyOrder.Price_List_Title__c}" /><br/>
+                                </div>
+                                
+                                <apex:inputField id="multiOrderLookup"  value="{! dummyOrder.Multi_Order_Filtered__c }" />
+                                -->
+                                <div style="padding-left:40px;" >
+                                    <apex:selectList style="width:200px;" id="multiOrderSelection" size="1" value="{! selectedMultiOrder }" multiselect="false" >
+                                        <apex:selectOptions value="{! multiOrders}"/>
+                                    </apex:selectList>
+                                </div>
+                                
+                            </div>
+                            <div class="col-md-4 text-center"> 
+
+                                
+                                <apex:commandButton styleClass="btn btn-default" value="Continue" onclick="doContinue(1);return false;" id="btnSubmit" />
+                                <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="step2" style="display: none;">
+                        <div class="col-md-4 text-left">
+                            <div class="alert alert-warning" role="alert">
+                                
+                                <apex:outputPanel layout="none">
+                                    <div style="padding-left:40px;" >
+                                        <!-- Price List Selection -->
+                                        <label>Choose Price List Title:</label>
+                                        <br/>
+                                        <apex:selectList style="width:200px;" id="priceListSelection2" size="1" value="{! defaultPriceList }" multiselect="false" >
+                                            <apex:selectOptions value="{! HDPriceLists }"/>
+                                        </apex:selectList>
+                                    </div>
+                                </apex:outputPanel>
+                                
+                            </div>
+                            <div class="col-md-4 text-center"> 
+                               
+                                <apex:commandButton styleClass="btn btn-default" value="Continue" onclick="doContinue(2);return false;" id="btnSubmit2" />
+                                <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </apex:form>
+            </apex:outputPanel>
+
+
+        </apex:outputPanel>
+    </div>
+    
+    <script>
+        function doContinue(step){
+            var newMultiOrder = j$("#radiocreate")[0].checked == true;
+            if(newMultiOrder && step==1){
+                j$("#step1").hide();
+                j$("#step2").show();
+            }else{
+                doContinueJS( newMultiOrder );
+            }
+        }
+        
+        function enabledisableMultiOrderLookup( value ){
+            var lookup = j$( "#{! $Component.thePage.theForm.multiOrderSelection}".replace(new RegExp(":", "g") , "\\:") );
+            //var lookupIcon = j$( "#{! $Component.thePage.theForm.multiOrderLookup}_lkwgt".replace(new RegExp(":", "g") , "\\:") );
+            var pls = j$( "#{! $Component.thePage.theForm.priceListSelection}".replace(new RegExp(":", "g") , "\\:") );
+            
+            lookup [0].disabled = value;
+            //lookupIcon [0].hidden = value;
+            pls [0].disabled = !value;
+        }
+        
+        enabledisableMultiOrderLookup(true);
+    </script>
+    
+</apex:page>

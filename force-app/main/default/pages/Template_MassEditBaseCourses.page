@@ -1,0 +1,55 @@
+<apex:page standardController="Base_Course__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="Base Course Name">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="Base Course Auto Number">
+<apex:outputField value="{!a.Base_Course_Auto_Number__c}"/>
+</apex:column>
+<apex:column headerValue="Program Type">
+<apex:inputField value="{!a.Program_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Status">
+<apex:inputField value="{!a.Status__c}"/>
+</apex:column>
+<apex:column headerValue="Has demo Lesson">
+<apex:inputField value="{!a.Has_Demo_Lesson__c}"/>
+</apex:column>
+<apex:column headerValue="Max Session for Factor">
+<apex:inputField value="{!a.Max_Session_for_Factor__c}"/>
+</apex:column>
+<apex:column headerValue="Large Group">
+<apex:inputField value="{!a.Large_Group__c}"/>
+</apex:column>
+<apex:column headerValue="Student count Scalability Factor">
+<apex:inputField value="{!a.Student_count_Scalability_Factor__c}"/>
+</apex:column>
+<apex:column headerValue="Fixed Number of Students">
+<apex:inputField value="{!a.Fixed_Number_of_Students__c}"/>
+</apex:column>
+<apex:column headerValue="BC Code">
+<apex:inputField value="{!a.BC_Short_Name__c}"/>
+</apex:column>
+<apex:column headerValue="BC Old ID">
+<apex:inputField value="{!a.BC_Old_ID__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

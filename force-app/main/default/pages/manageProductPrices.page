@@ -1,0 +1,997 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 02-20-2023
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<apex:page standardController="Price_List_Title__c" extensions="manageProductPricesCtrl" id="thePage" >
+    <!--apex:outputPanel rendered="false">
+        {!FR_Order__c.Price_List_Title__c}
+    </apex:outputPanel-->
+    
+    <!-- Resources Libraries -->
+    <link href="{!URLFOR($Resource.Bootstrap4SW, 'css/bootstrap-namespaced.min.css')}" rel="stylesheet"/>
+    <link href="{!URLFOR($Resource.JQueryUI, 'jquery-ui.min.css')}" rel="stylesheet"/>
+    
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'jquery-1.8.2.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'ui/jquery-ui-1.9.1.custom.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'postmessage/jquery.ba-postmessage.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQuery, 'bbq/jquery.ba-bbq.min.js')}"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.AngularLibs, 'angular-1.5.0/angular.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.AngularLibs, 'ag-grid-master/dist/ag-grid.js')}"/>
+
+    <apex:includeScript value="{!URLFOR($Resource.momentjs)}"/>
+    
+    <!-- ************************************************** -->
+    
+    <style>
+        .ag-selection-checkbox{
+            margin-top: 20px !important;
+        }
+        
+        #mainDiv .inputCell{
+            text-align:right;
+            max-width: 50px;
+            width: 100%;
+        }
+        
+        #mainDiv .dataCell{
+            height: 100%;
+            text-align: center;
+            vertical-align: middle;
+            display: table-cell;
+        }
+        
+        #mainDiv .dataCellLeft{
+            text-align: left;
+        }
+        
+        #mainDiv .dataCell a{
+            color: #3c3d3e;
+        }
+        
+        #mainDiv .dataCell_Currency{
+            text-align: right;
+        }
+        
+        #mainDiv .dataCell_Outer{
+            display: table;
+            width: 100%;
+        }
+        
+        #mainDiv .inputCell_Outer{
+            display: table;
+            height: 100%;
+            width: 100%;
+        }
+        
+        #mainDiv .inputCell_Inner{
+            text-align: center;
+            vertical-align: middle;
+            display: table-cell;
+        }
+        
+        .setProductTable{
+            width: 100%;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        
+        .setProductTable tr.setProductTableHeader{
+            background: linear-gradient(#fff, #d3d3d3);
+            border-bottom: 1px solid #808080;
+        }
+        
+        .setProductTable th{
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+            text-align: center;
+        }
+        
+        .setProductTable td{
+            border: 1px solid black;
+            border-collapse: collapse;
+            background-color: white;
+            padding: 5px;
+        }
+        
+        .previewImage img{
+            max-height: 55px;
+            max-width: 55px;
+        }
+        
+        .popupImage img{
+            max-height: 75%;
+            max-width: 75%;
+        }
+
+        .header{
+            font-size: 18px;
+            text-decoration: underline;
+        }
+
+        .fromToDate{
+            position: absolute;
+            right: 60px;
+        }
+
+        #status{
+            display: none;
+        }
+
+        #statusDiv{
+                color: cornflowerblue;
+                font-weight: 700;
+                position: absolute;
+                text-align: center;
+                right: 50%;
+                background-color: transparent;
+        }
+    </style>
+    
+    <script>
+        //EXTRA FUNCTIONS
+        var j$ = jQuery.noConflict();
+        moment.utc();
+
+        function formatToCurrency( n ) {
+            if( n == null || n == undefined ){
+                return '0.00';
+            }
+            n = parseFloat(n);
+            nSplit = n.toFixed(2).split('.');
+            var withoutDec = nSplit[0];
+            var decimals = nSplit[1];
+            
+            withoutDec.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            var retVal = withoutDec + '.' + decimals;
+            
+            return retVal;
+        }
+
+        var selectedPriceId = '';
+        var selectedPrice = '';
+        function selectPrice(priceId,price){
+            selectedPriceId = priceId;
+            selectedPrice = price;
+        }        
+        
+        function validateUndefined( v ){ if( v == undefined) return ''; return v; };
+    
+        console.log( "Start" );
+        var jsonData = {! jsonData };
+        var fieldData = {! prodFields };
+        var EXCHANGE_RATE_HD = '{!Price_List_Title__c.Exchange_Rate_from_HD_Currency__c}';
+        EXCHANGE_RATE_HD=j$.isNumeric(EXCHANGE_RATE_HD)?EXCHANGE_RATE_HD:1;
+        
+        //INITIALIZE GRID & ANGULAR MODULE
+        agGrid.initialiseAgGridWithAngular1(angular);
+        
+        var fileBrowserModule = angular.module('ngApp', ['agGrid']);
+        
+        
+        //TEMPLATE USED ON TABLE CELLS
+        var minWidth = 130;
+        var rowHeight = 55;
+        
+        var QUANTITY_TEMPLATE = '<div class="inputCell_Outer" ><div class="inputCell_Inner" ><input class="inputCell" type="text" onkeypress="return event.charCode >= 48 && event.charCode <= 57" ng-model="data.quantity" /></div></div>';
+        var SELLING_PRICE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCell_Currency" ><span ng-bind="currencyFormatOnly( data.productPrice.CurrencyIsoCode)" ></span><input style="width:70px;margin-left:5px;" ng-model="data.productPrice.Selling_Price__c"></input></div></div>';
+        var SELLING_PRICE_QUANTITY_TEMPLATE = '<div class="dataCell_Outer" ><div ng-if="data.priceQuantity.length == 0" class="dataCell dataCell_Currency" ><span ng-bind="currencyFormatOnly( data.productPrice.CurrencyIsoCode)" ></span><input style="width:70px;margin-left:5px;" ng-model="data.productPrice.Selling_Price__c"></input></div>'+
+            '<div ng-if="data.priceQuantity.length > 0" ng-repeat="price in data.priceQuantity"><span ng-bind="currencyFormatOnly( data.productPrice.CurrencyIsoCode)" ></span><input style="width:70px;margin-left:5px;" ng-model="data.price.Price__c"></input></div></div>';
+        var STUDENT_PRICE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCell_Currency" ><span ng-bind="currencyFormat(data.productPrice.Recommended_Price_for_Student__c, data.productPrice.HD_Currency__c)" ></span></div></div>';
+        var PURCHASE_PRICE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCell_Currency" ><span ng-bind="currencyFormat(data.productPrice.Purchase_Price__c, data.productPrice.HD_Currency__c)" ></span></div></div>';
+        var PURCHASE_PRICE_QUANTITY_TEMPLATE = '<div class="dataCell_Outer" style="text-align: right;"><div ng-if="data.hdPriceQuantity.length == 0" class="dataCell dataCell_Currency" ><span ng-bind="currencyFormat(data.productPrice.Purchase_Price__c, data.productPrice.HD_Currency__c)" ></span></div>'+
+            '<div ng-if="data.hdPriceQuantity.length > 0" ng-repeat="price in data.hdPriceQuantity"><span>{{price.Minimum_Quantity__c + " - " +price.Maximum_Quantity__c}}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span ng-bind="currencyFormat(price.Price__c, data.productPrice.HD_Currency__c)" ></span></div></div>';
+        var STUDENT_PRICE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCell_Currency" ><span ng-bind="currencyFormat(data.productPrice.Recommended_Price_for_Student__c, data.productPrice.HD_Currency__c)" ></span></div></div>';
+        var TOTAL_PRICE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCell_Currency" ><span ng-bind="currencyFormat(data.productPrice.Selling_Price__c * data.quantity, data.productPrice.HD_Currency__c)" ></span></div></div>';
+        var DATA_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell" ><span ng-bind="REPLACEMEWITHDATAFIELD" ></span></div></div>';
+        var OPENSET_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell" style="text-align:center;" ><input ng-click="openSetProducts(data.setProducts)" type="button" value="+" style="display:none;{{ hasSetProducts(data.setProducts.length) }}" /></div></div>';
+        var OPENSETPOPUP_TEMPLATE = '<table class="setProductTable" >REPLACEMEWITHROWS</table>';
+        var HOVERDETAIL_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell dataCellLeft" ><input ng-click="openSetProducts(data.setProducts)" type="button" value="+" style="display:none;{{ hasSetProducts(data.setProducts.length) }}" />&nbsp;<a ng-mouseenter="LookupHoverDetail(data.productPrice.HD_Product__c).show()" ng-mouseleave="LookupHoverDetail( data.productPrice.HD_Product__c).hide();" ng-focus="LookupHoverDetail( data.productPrice.HD_Product__c).show();" ng-blur="LookupHoverDetail( data.productPrice.HD_Product__c).hide();" id="lookup{{data.productPrice.HD_Product__c}}" target="_blank" href="{!$Site.Prefix}/{{data.productPrice.HD_Product__c}}">{{REPLACEMEWITHDATAFIELD}}</a></div></div>';
+        var IMAGE_TEMPLATE = '<div class="dataCell_Outer" ><div class="dataCell" ><div class="previewImage" ng-click=\'openImage(REPLACEMEWITHDATAFIELD)\' ng-bind-html="renderHtml(REPLACEMEWITHDATAFIELD)" ></div></div></div>';
+
+        
+        //SETUP OF THE ANGULAR CONTROLLER
+        
+        fileBrowserModule.controller('appCtrl', function($scope, $sce) {
+            //Simple function to externally get the rowData
+            $scope.getData = function getData(){
+                return $scope.gridOptions.rowData;
+            }
+
+            $scope.currencyFormat = function( v, c ){ return (c==undefined?'$':c) + ' ' + formatToCurrency( v ); };
+
+            $scope.currencyFormatOnly = function( c ){ 
+                if( c == null || c == undefined ){
+                    return '$';
+                }
+                return c; 
+            };
+
+            $scope.hasSetProducts = function( v ){ if( v > 0 ){return 'display: table-cell';} return 'display: none'; };
+            
+            $scope.LookupHoverDetail = function( v ){
+                                                return LookupHoverDetail.getHover('lookup' + v, '/' + v.substr(0, 15) + '/m?isAjaxRequest=1&nocache=1255455249902' );
+                                            }
+            
+            $scope.renderHtml = function(html_code){
+                                                    return $sce.trustAsHtml(html_code);
+                                                };
+            //---------------------------------------
+            //OPEN SET MODAL DIALOG CREATION FUNCTION
+            //---------------------------------------
+            
+            $scope.openSetProducts = function( setProducts ){ 
+                                                    var htmlRows = '<tr class="setProductTableHeader" ><th >Product Name</th><th>PN Code</th><th width="10%">Product Type</th><th width="10%">Quantity In Set</th></tr>';
+                                                    var template = OPENSETPOPUP_TEMPLATE ;
+                                                    
+                                                    for( var i=0; i < setProducts.length; i++ ){
+                                                        var prodName = validateUndefined(setProducts[i].Sub_Product_Name__c);
+                                                        var prodType = validateUndefined(setProducts[i].Priority_Sub_Product_Type__c);
+                                                        var prodQnt = validateUndefined(setProducts[i].Quantity_in_Set__c);
+                                                        var pnCode = validateUndefined(setProducts[i].Sub_Product_PN_Code__c);        
+                                                        
+                                                        htmlRows += '<tr>';
+                                                        htmlRows += '<td>' + prodName + '</td>';
+                                                        htmlRows += '<td>' + pnCode + '</td>';
+                                                        htmlRows += '<td>' + prodType + '</td>';
+                                                        htmlRows += '<td style="text-align:right;" >' + prodQnt + '</td>';
+                                                        htmlRows += '</tr>';
+                                                    }
+                                                    
+                                                    template = template.replace('REPLACEMEWITHROWS', htmlRows);
+                                                    
+                                                    var j$modalDialog = j$('<div></div>') 
+                                                        .html('<style>.ui-dialog { 1000000000 !important ;}</style><div>'+template+'</div>') 
+                                                        .dialog({ 
+                                                        autoOpen: false, 
+                                                        title: setProducts[0].Set_Product__r.Name, 
+                                                        resizable: false, 
+                                                        width: 600, 
+                                                        autoResize: true, 
+                                                        modal: true, 
+                                                        draggable: false, 
+                                                        zIndex: 1500 
+                                                        });
+                                                    
+                                                    j$modalDialog.dialog('open');
+                                                 };            
+            
+            //--------------------------------
+            //    IMAGE POPUP
+            //--------------------------------
+            
+            $scope.openImage = function( image ){ 
+                                                    var htmlImage = image.replace(" height=", " xheight=").replace(" width=", " xwidth=");
+                                                    
+                                                    var j$modalDialog = j$('<div></div>') 
+                                                        .html('<div style="display: table;text-align:center;width: 100%;" ><style>.ui-dialog { 1000000000 !important ;}</style><div class="popupImage" style="display: table-cell;vertical-align:middle;" >'+htmlImage+'</div></div>') 
+                                                        .dialog({ 
+                                                        autoOpen: false, 
+                                                        title: 'image', 
+                                                        resizable: false,  
+                                                        autoResize: true,
+                                                        width: 1000,
+                                                        modal: true, 
+                                                        draggable: false, 
+                                                        zIndex: 1500 
+                                                        });
+                                                    
+                                                    j$modalDialog.dialog('open');
+                                                 };
+            
+            //--------------------------------
+            //    COLUMN DEFINITION FUNCTION
+            //--------------------------------
+            
+            function loadColumns(){
+            
+                var colDef = [];
+                
+                //Checkbox column
+                colDef.push({
+                                // INFO: field = 'selected' (check functions: checkboxSelection, onRowSelected, onRowDeselected )
+                                headerName: '', 
+                                minWidth: 30, 
+                                checkboxSelection: true, 
+                                suppressSizeToFit: true, 
+                                suppressSorting : true, 
+                                suppressMenu : true, 
+                                cellStyle: {'text-align': 'center', 'vertical-align': 'middle'}, 
+                                headerCellRenderer: headerCellRendererFunc
+                            });
+                
+                
+                //Columns from the fieldSet
+                
+                for( var i=0; i < fieldData.length; i++ ){
+                    var cd = {
+                                headerName: fieldData[i].label, 
+                                minWidth: minWidth, 
+                                field: 'productPrice.' + fieldData[i].name, 
+                                cellClass: 'dataCell',
+                                template: DATA_TEMPLATE
+                            };
+                    
+                    if( fieldData[i].name == 'PN_Code__c' ){
+                        cd.filter = 'text';
+                    }
+                    
+                    if( fieldData[i].name == 'HD_Product__r.Product_Image__c' ){
+                        cd.suppressMenu = true;
+                        cd.suppressSorting = true;
+                        cd.template = IMAGE_TEMPLATE;
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'HD_Product__r.Name' || fieldData[i].name == 'Product_Name__c' ){
+                        cd.template = HOVERDETAIL_TEMPLATE;
+                        cd.filter = 'text';
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'Purchase_Price__c'){
+                        //cd.template = PURCHASE_PRICE_TEMPLATE;
+                        cd.template = PURCHASE_PRICE_QUANTITY_TEMPLATE;
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'Recommended_Price_for_Student__c' ){
+                        cd.suppressMenu = true;
+                        cd.template = STUDENT_PRICE_TEMPLATE;
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'Purchase_Price_Modify_Date__c' ){
+                        cd = {
+                                headerName: fieldData[i].label, 
+                                minWidth: minWidth, 
+                                field: 'productPrice.' + fieldData[i].name, 
+                                cellClass: 'dataCell',
+                                filter: 'text',
+                                valueGetter: 'data.' + cd.field,
+                                cellRenderer: dateCelRender
+                            };
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'Price_Modify_Date__c' ){
+                        cd = {
+                                headerName: fieldData[i].label, 
+                                minWidth: minWidth, 
+                                field: 'productPrice.' + fieldData[i].name, 
+                                cellClass: 'dataCell',
+                                filter: 'text',
+                                valueGetter: 'data.' + cd.field,
+                                cellRenderer: datetimeCelRender
+                            };
+                        
+                        colDef.push( cd );
+                    }else if( fieldData[i].name == 'Selling_Price__c'){
+                        cd = {
+                                headerName: fieldData[i].label, 
+                                minWidth: minWidth, 
+                                cellClass: 'dataCell',
+                                valueGetter: sellingValueGetter,
+                                cellRenderer: sellingCelRender,
+                                newValueHandler : currencyNewValueHandler
+                            };
+                        //Selling Price column
+                        cd.cellStyle = { 'text-align':'right'};
+                        cd.editable = true;
+                        //sellingPriceColumn.template = SELLING_PRICE_TEMPLATE;
+                        colDef.push(cd);
+                    }else {
+                        
+                        colDef.push( cd );
+                    }
+                    
+                    if( cd.template != undefined ){
+                        cd.template = cd.template.replace(new RegExp('REPLACEMEWITHDATAFIELD', 'g'), 'data.' + cd.field);                        
+                    }
+                }
+                
+                return colDef;
+            }
+            
+            
+            //--------------------------
+            //    SETUP GRID OPTIONS
+            //--------------------------
+            
+            
+            $scope.gridOptions = {
+                angularCompileRows: true,
+                columnDefs: loadColumns(),
+                rowData: createRowData,
+                rowSelection: 'multiple',
+                enableColResize: true,
+                enableSorting: true,
+                enableFilter: true,
+                getRowHeight: function(params) {
+                    if (typeof params.data !== 'undefined') {
+                        return params.data.rowHeight;
+                    }
+                },
+                onModelUpdated: onModelUpdated,
+                suppressRowClickSelection: true,
+                suppressCellSelection: true,
+                onRowSelected: onRowSelected,
+                onRowDeselected: onRowDeselected,
+                isExternalFilterPresent: isExternalFilterPresent,
+                doesExternalFilterPass: doesExternalFilterPass
+                //rowModelType: 'pagination'
+            };
+
+            function headerCellRendererFunc(params) {
+                var cb = document.createElement('input');
+                 cb.setAttribute('type', 'checkbox');
+
+                var eHeader = document.createElement('label');
+                var eTitle = document.createTextNode(params.colDef.headerName);
+                eHeader.appendChild(cb);
+                eHeader.appendChild(eTitle);
+
+                cb.addEventListener('change', function (e) {
+                    if (j$(this)[0].checked) {
+                        $scope.gridOptions.api.forEachNodeAfterFilter(function(node, idx){
+                            $scope.gridOptions.api.selectIndex(idx, true, false);
+                        });
+                    } else {
+                        $scope.gridOptions.api.deselectAll();
+                    } 
+                });
+                return eHeader; 
+            }
+
+            function currencyNewValueHandler(params) {
+                var valueAsNumber = parseInt(params.newValue);
+                if (isNaN(valueAsNumber)) {
+                    window.alert("Invalid value " + params.newValue + ", must be a number");
+                }else{
+                    if(params.data.priceQuantity.length > 0){
+                        for(priceIdx in params.data.priceQuantity){
+                            if(params.data.priceQuantity[priceIdx].Id == selectedPriceId){
+                                params.data.priceQuantity[priceIdx].Price__c = params.newValue;
+                                selectedPriceId = '';
+                                selectedPrice = '';
+                                break;
+                            }
+                        }
+                    }else{
+                        params.data.productPrice.Selling_Price__c = params.newValue;
+                    }
+                    $scope.gridOptions.api.selectIndex(params.rowIndex, true, false);   
+                    RefreshGrid();
+                }
+            }
+
+            function sellingValueGetter(params){
+                if(params.data == undefined){
+                    return params.value;
+                }
+                var retVal = params.data.productPrice.Selling_Price__c;
+                if(params.data.priceQuantity.length > 0){
+                    retVal = selectedPrice;
+                }
+                return retVal;
+            }
+
+            function sellingCelRender(params) {
+                if(params.data == undefined){
+                    return params.value;
+                }
+
+                if(params.data.priceQuantity.length > 0){
+                    var retHtml = '<div class="dataCell_Outer" >';
+                    params.data.priceQuantity.forEach(function(price){
+                        var val1 = price.Minimum_Quantity__c + ' - ' + price.Maximum_Quantity__c;
+                        var val2 = $scope.currencyFormat(price.Price__c, params.data.productPrice.CurrencyIsoCode);
+                        retHtml +='<div onclick="selectPrice(\''+price.Id+'\',\''+price.Price__c+'\')"><span>'+val1+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span>'+val2+'</span>&nbsp;&nbsp;<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></div>';
+                    });
+                    retHtml +='</div>';
+                    
+                    return retHtml;
+                }else{
+                    val = $scope.currencyFormat(params.value, params.data.productPrice.CurrencyIsoCode);
+                    var retHtml = '<div class="dataCell_Outer" ><div class="dataCell" ><span>'+val+'</span>&nbsp;&nbsp;<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></div></div>';
+                    return retHtml; 
+                }
+            }
+
+            function currencyCelRender(params) {
+                if(params.data != undefined){
+                    val = $scope.currencyFormat(params.value, params.data.productPrice.CurrencyIsoCode);
+                    var retHtml = '<div class="dataCell_Outer" ><div class="dataCell" ><span>'+val+'</span>&nbsp;&nbsp;<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></div></div>';
+                    return retHtml;
+                }
+                return params.value;
+            }
+
+            function dateCelRender(params) {
+                
+                if(params.data != undefined && params.value != undefined){                    
+                    var retHtml = '<div class="dataCell_Outer" ><div class="dataCell" ><span>'+formatDate(params.value)+'</span></div></div>';
+                    return retHtml;
+                }
+                return params.value;
+            }
+
+            function datetimeCelRender(params) {
+                
+                if(params.data != undefined && params.value != undefined){                    
+                    var retHtml = '<div class="dataCell_Outer" ><div class="dataCell" ><span>'+moment(params.value).utc().format("DD/MM/YYYY HH:mm")+'</span></div></div>';
+                    return retHtml;
+                }
+                return params.value;
+            }
+
+            function formatDate(value){
+                var newValue = value.split("-");
+                return newValue[2][0] + newValue[2][1] + '/' + newValue[1] + '/' +  newValue[0];
+            }
+            
+            function newValueHandler (param){
+                //This will update the value on the table.
+                param.data[param.colDef.field] = param.newValue;
+            }
+            
+            //FIXME: In future it would be better to simple get the Nodes (Rows) selected with the function $scope.gridOptions.api.getSelectedRows
+            
+            function onRowSelected( event ){
+                //When a Row is selected, we have to manually change its selection on the RowData.
+                var rowData = $scope.gridOptions.rowData;
+                rowData[event.node.id].selected = true;
+            }
+            
+            function onRowDeselected( event ){
+                //When a Row is deselected, we have to manually change its selection on the RowData.
+                var rowData = $scope.gridOptions.rowData;
+                rowData[event.node.id].selected = false;
+            }
+            
+            function onModelUpdated() {
+                var model = $scope.gridOptions.api.getModel();
+                var totalRows = $scope.gridOptions.rowData.length;
+                var processedRows = model.getVirtualRowCount();
+                $scope.rowCount = processedRows.toLocaleString() + ' / ' + totalRows.toLocaleString();
+            }
+            
+            function createRowData(dataSource) {
+                for( var i=0; i < dataSource.length; i++){
+                    rowData.push({
+                        productPrice : dataSource[i].productPrice,
+                        priceQuantity : dataSource[i].priceQuantity,
+                        hdPriceQuantity : dataSource[i].hdPriceQuantity,
+                        quantity : dataSource[i].quantity,
+                        selected : dataSource[i].selected
+                    });
+                }
+            }
+
+            function isExternalFilterPresent() {
+                retVal = false;
+                if(j$( "#PurchasefromDate" ).val() != '' && j$( "#PurchasetoDate" ).val() != ''){
+                    retVal = true;
+                }
+                if(j$( "#SellingfromDate" ).val() != '' && j$( "#SellingtoDate" ).val() != ''){
+                    retVal = true;
+                }   
+
+                return retVal;
+            }
+
+            function doesExternalFilterPass(node) {
+                var filter1 = true;
+                var filter2 = true;
+                if(j$( "#PurchasefromDate" ).val() != '' && j$( "#PurchasetoDate" ).val() != ''){
+                    if(node.data.productPrice.Purchase_Price_Modify_Date__c == undefined){
+                        filter1 = false;
+                    }else{
+                        var date = formatDate(node.data.productPrice.Purchase_Price_Modify_Date__c);
+                        var purchaseModDate = new Date(date);
+                        var fromDate = new Date(j$( "#PurchasefromDate" ).val());
+                        var toDate = new Date(j$( "#PurchasetoDate" ).val());
+                        if(fromDate <= purchaseModDate && purchaseModDate <= toDate){
+                            filter1 = true;
+                        }else{
+                            filter1 = false;
+                        } 
+                    }
+                    
+                }
+
+                if(j$( "#SellingfromDate" ).val() != '' && j$( "#SellingtoDate" ).val() != ''){
+                    if(node.data.productPrice.Price_Modify_Date__c == undefined){
+                        filter2 = false;
+                    }else{
+                        var date = formatDate(node.data.productPrice.Price_Modify_Date__c);
+                        var priceModDate = date.split("/");
+                        priceModDate = new Date(priceModDate[2],priceModDate[1]-1,priceModDate[0]);
+                        var fromDate = j$( "#SellingfromDate" ).val().split("/");
+                        fromDate = new Date(fromDate[2],fromDate[1]-1,fromDate[0]);
+                        var toDate = j$( "#SellingtoDate" ).val().split("/");
+                        toDate = new Date(toDate[2],toDate[1]-1,toDate[0]);
+                        if(fromDate <= priceModDate && priceModDate <= toDate){
+                            filter2 = true;
+                        }else{
+                            filter2 = false;
+                        }  
+                    }                    
+                }
+
+                return filter1 && filter2;
+            }
+
+            
+            
+            //-----------------
+            //    PAGINATION
+            //-----------------
+            
+            var pageSize = 10;
+            
+            function onPageSizeChanged(pageSize) {
+                pageSize = new Number(pageSize);
+                createNewDatasource();
+            };
+            
+            $scope.createNewDatasource = function () {
+                /*var dataSource = {
+                                    pageSize: pageSize, 
+                                    getRows: function (params) {
+                                        var rowsThisPage = jsonData.slice(params.startRow, params.endRow);
+                                        
+                                        var lastRow = jsonData.length;
+                                        
+                                        params.successCallback(rowsThisPage, lastRow);
+                                    }
+                                };
+                //Pagination
+                //$scope.gridOptions.api.setDatasource(dataSource);*/
+                for( var i=0; i < jsonData.length; i++){
+                    jsonData[i].rowHeight = 55;
+                    if (jsonData[i].priceQuantity.length > 1) {
+                        jsonData[i].rowHeight = jsonData[i].priceQuantity.length * 30;
+                    }
+                }
+                
+                //No Pagination
+                $scope.gridOptions.api.setRowData(jsonData);
+            }
+            
+        });
+
+        //--------------------------------------------------------
+        // setup the grid after the page has finished loading
+        //--------------------------------------------------------
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            getProdTableScope().createNewDatasource();
+            autoSizeAllColumns();
+            resizeRelatedList('FR Order Products Line', '100px');
+            resizeRelatedList('Price', '100px');
+            resizeRelatedList('Total Price', '100px');
+            resizeRelatedList('Quantity', '100px');
+            resizeRelatedList('PN Code', '60px');
+            resizeRelatedList('Product', 'auto');
+            resizeRelatedList('Purchase Price Modify Date', '100px');
+            resizeRelatedList('Recommended Price for Student', '100px');
+            fixTableSize();
+        });
+
+
+        function onDateFilterChange(){
+            getProdTableScope().gridOptions.api.onFilterChanged();
+        } 
+
+        //---------------------------------------
+        //OPEN SET MODAL DIALOG DISCOUNT MARKUP
+        //---------------------------------------
+
+        function discountSelectOptionChanged(){
+            if(j$('#discountDialog').find('#applyOption').val() != 'price'){
+                j$('#discountDialog').find('input:radio').prop( "disabled", false );
+            }else{
+                j$('#discountDialog').find('input:radio').prop( "disabled", true );
+            }
+        }
+
+        //Apply the selected discount/markup on model 
+        function saveDiscountChanges(){
+            var selectedRows = getProdTableScope().gridOptions.api.getSelectedRows();
+            var discountMarkupValue = parseFloat(j$('#discountDialog').find('#discountMarkupValue').val());
+
+            if(!j$.isNumeric(discountMarkupValue)){
+                alert('Value Required.');
+                return false;
+            }
+
+            j$.each(selectedRows, function(index, val) {
+                if(j$('#discountDialog').find('#applyOption').val() == 'price'){  
+                    val.productPrice.Selling_Price__c = discountMarkupValue;
+                    if(val.priceQuantity.length > 0){
+                        for(priceIdx in val.priceQuantity){
+                            val.priceQuantity[priceIdx].Price__c = discountMarkupValue;
+                        }
+                    }
+                }else{
+                    //get price based
+                    if(val.priceQuantity.length == 0){
+                        var priceValue;
+                        if(j$('#discountDialog').find(':radio:checked').val() == 'Selling'){
+                            priceValue = val.productPrice.Selling_Price__c;
+                        }else if(j$('#discountDialog').find(':radio:checked').val() == 'Purchase'){
+                            priceValue = val.productPrice.Purchase_Price_HD_Currency__c * EXCHANGE_RATE_HD;
+                        }
+                        
+                        //apply discount/markup formula
+                        if(j$('#discountDialog').find('#applyOption').val() == 'discount'){
+                            val.productPrice.Selling_Price__c = priceValue * (100 - discountMarkupValue)/100;
+                        }else if(j$('#discountDialog').find('#applyOption').val() == 'markUp'){
+                            val.productPrice.Selling_Price__c = priceValue * (discountMarkupValue/100) + priceValue;
+                        }
+
+                        if(j$('#discountDialog').find('#roundOption').prop('checked')){
+                            //val.productPrice.Selling_Price__c = Math.round(val.productPrice.Selling_Price__c);
+                            //Updated by-: Shivram Saini     Date-: 28 Nov 2018    Task-000001964
+                            val.productPrice.Selling_Price__c = (Math.round(val.productPrice.Selling_Price__c*10)/10).toFixed(2); 
+                        }
+                    }else{
+                        for(priceIdx in val.priceQuantity){
+                            var priceValue;
+                            if(j$('#discountDialog').find(':radio:checked').val() == 'Selling'){
+                                priceValue = val.priceQuantity[priceIdx].Price__c;
+                            }else if(j$('#discountDialog').find(':radio:checked').val() == 'Purchase'){
+                                priceValue = val.hdPriceQuantity[priceIdx].Price__c * EXCHANGE_RATE_HD;
+                            }
+                            
+                            //apply discount/markup formula
+                            if(j$('#discountDialog').find('#applyOption').val() == 'discount'){
+                                val.priceQuantity[priceIdx].Price__c = priceValue * (100 - discountMarkupValue)/100;
+                            }else if(j$('#discountDialog').find('#applyOption').val() == 'markUp'){
+                                val.priceQuantity[priceIdx].Price__c = priceValue * (discountMarkupValue/100) + priceValue;
+                            }
+
+                            if(j$('#discountDialog').find('#roundOption').prop('checked')){
+                                //val.priceQuantity[priceIdx].Price__c = Math.round(val.priceQuantity[priceIdx].Price__c);
+                                //Updated by-: Shivram Saini     Date-: 28 Nov 2018    Task-000001964
+                                val.priceQuantity[priceIdx].Price__c = (Math.round(val.priceQuantity[priceIdx].Price__c*10)/10).toFixed(2); 
+                            }
+                        }
+                    }
+                }                  
+            });
+
+            RefreshGrid();
+            j$('#discountDialog').dialog( "close" );
+        }
+        
+        function openDiscountMarkup( ){ 
+            var selectedRows = getProdTableScope().gridOptions.api.getSelectedRows();
+            
+            if(selectedRows.length == 0){
+                alert('You must select a Product first.');                
+                return false;
+            }
+
+            var j$modalDialog = j$("<div id='discountDialog'></div>") 
+                .html("<style>.ui-dialog { 1000000000 !important ;}</style><div>" +
+                        "<br/><br/><select id='applyOption' style='width:330px'>"+
+                            "<option value='price'>Price to all chosen products</option>"+
+                            "<option value='discount'>Apply Discount percentage to all selected products</option>"+
+                            "<option value='markUp'>Apply Mark-up percentage to all selected products Price</option>"+
+                        "</select>&nbsp;&nbsp;<input id='discountMarkupValue' style='width:70px;'></input><br/><br/>"+
+                        "Calculate based on: <input type='radio' name='basedOn' value='Purchase'></input> Purchase Price <input type='radio' name='basedOn' value='Selling' checked></input> Selling Price<br/><br/>"+
+                        "Round the Selling Price <input type='checkbox' id='roundOption'></input><br/><br/>"+
+                        "{!$Label.Text_on_Discount_Markup}" +
+                    "</div>") 
+                .dialog({ 
+                autoOpen: false, 
+                title: 'Discount/Markup', 
+                resizable: false, 
+                width: 450, 
+                autoResize: true, 
+                modal: true, 
+                draggable: false, 
+                zIndex: 1500,
+                close: function(){
+                    j$(this).dialog('destroy').remove();
+                },
+                buttons: {
+                            Cancel: function() {
+                                j$( this ).dialog( "close" );
+                            },
+                            Ok: function() {
+                                saveDiscountChanges();                                                
+                            }
+                          } 
+                });
+            j$modalDialog.on('change','#applyOption', function(event) {
+                discountSelectOptionChanged();
+            });
+            discountSelectOptionChanged();
+            j$modalDialog.dialog('open');
+        };   
+        
+        function getProdTableScope(){
+            //Example:
+            //        getProdTableScope().getData()[0].quantity
+            
+            return angular.element(document.getElementById("mainDiv")).scope();
+        }
+        
+        function autoSizeAllColumns(){
+            getProdTableScope().gridOptions.columnApi.autoSizeColumns( getProdTableScope().gridOptions.columnApi.getAllColumns() );
+            getProdTableScope().gridOptions.api.sizeColumnsToFit();
+        }
+        
+        function resetFilters(){
+            j$( "#SellingfromDate" ).val('');
+            j$( "#SellingtoDate" ).val('');
+            j$( "#PurchasefromDate" ).val('');
+            j$( "#PurchasetoDate" ).val('');
+            getProdTableScope().gridOptions.api.setFilterModel();            
+        }
+        
+        function save(){
+            var selectedRows = getProdTableScope().gridOptions.api.getSelectedRows(); 
+            console.log(selectedRows);
+
+            if( selectedRows.length == 0 ){
+                alert( 'Please select at least 1 product' );
+            }else{
+                j$("#status").show();
+                SaveJS(JSON.stringify(selectedRows));                
+            }
+        }
+
+        function hideMessage(){ 
+            j$("#status").hide();
+            location.reload();
+            window.setTimeout(function(){
+                j$("#statusDiv").hide();
+            },6000);
+        }
+
+        function RefreshGrid(){
+            getProdTableScope().gridOptions.api.refreshView();
+        }
+        
+        function ReLoadGrid(){
+            var jsonData = getProdTableScope().getData();
+            
+            for( var d in jsonData ){
+                jsonData[d].quantity = '';
+            }
+            console.log(jsonData);
+            getProdTableScope().createNewDatasource();
+        }
+        
+        //For Resizing the Related List columns. SW-18147 [QA Resize Related list]
+        function resizeRelatedList( colName, colWidth ){
+            var elem = j$( "table.list", j$("#thePage\\:relatedList") ) ;
+            var ths = elem.find("th");
+            
+            for( var i = 0; i < ths.length; i++ ){
+                if(ths[i].innerHTML == colName  ){
+                    ths[i].style.width = colWidth;
+                }
+            }
+        }
+        
+        function fixTableSize(){
+            var h = j$("html");
+            var b = j$(".bodyDiv");
+            var x = j$("#mainDiv");
+            
+            if( h.width() != b.width() + 20 ){
+                
+                x[0].style.width = x.width() - (b.width() + 20 - h.width() ) + 'px' ;
+                
+                autoSizeAllColumns();
+            }else{
+                if( x[0].style.width != 'auto' ){
+                    autoSizeAllColumns();
+                }
+                x[0].style.width = "auto";
+            }
+            
+            resizeRelatedList('FR Order Products Line', '100px');
+            resizeRelatedList('Price', '100px');
+            resizeRelatedList('Total Price', '100px');
+            resizeRelatedList('Quantity', '100px');
+            resizeRelatedList('pn Code', '60px');
+            resizeRelatedList('Product', 'auto');            
+            resizeRelatedList('Purchase Price Modify Date', '100px');
+            resizeRelatedList('Recommended Price for Student', '100px');
+        }
+
+        function returnToRecord(){
+            window.location.href = '{!$CurrentPage.parameters.retURL}';
+        }
+        
+        //var fixTableSize_timer = window.setInterval(function(){ fixTableSize(); }, 1000);
+
+
+        j$(function() {
+            //INIT DATE FILTER
+            j$( "#SellingfromDate" ).datepicker({ dateFormat: 'dd/mm/yy' });
+            j$( "#SellingtoDate" ).datepicker({ dateFormat: 'dd/mm/yy' }); 
+            j$( "#PurchasefromDate" ).datepicker({ dateFormat: 'dd/mm/yy' });
+            j$( "#PurchasetoDate" ).datepicker({ dateFormat: 'dd/mm/yy' });
+        });
+
+    </script>
+    
+    <!-- ************************************************** -->
+    
+    <apex:form id="theForm">
+        <apex:outputPanel id="FailurePanel" layout="none" rendered="{!NOT(ISBLANK(showError))}">        
+            <br/>
+            <div class="col-md-4 text-center"> 
+                <div class="alert alert-error" role="alert">
+                    <p>There was an error. If the problem persists, please contact the system administrator <br/> 
+                       <br/> 
+                       <span style="color:red;">{!showError}</span>
+                       <br/>
+                    </p>
+                    
+                </div>
+                
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel id="statusPanel" layout="none" rendered="{! saveSuccess == 'true'}"> 
+            <br/>
+            <div id="statusDiv" class="bootstrap-sf1 col-md-4 text-center"> 
+                <div>
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>&nbsp;<span>Record Saved!</span>
+                </div>                
+            </div>
+        </apex:outputPanel>
+
+        <apex:pageMessages />
+        
+        <apex:actionFunction name="SaveJS" action="{! Save }" reRender="" oncomplete="hideMessage();">
+            <apex:param assignTo="{!jsonSaveData}" name="jsonData" value="" />
+        </apex:actionFunction>
+        
+        <apex:sectionHeader title="Price List Title" subtitle="{! Price_List_Title__c.Name}" />
+        
+        <apex:pageBlock >
+            <apex:pageBlockSection >
+                <apex:repeat var="f" value="{!$ObjectType.Price_List_Title__c.FieldSets.Manage_Product}" >
+                    <apex:outputField value="{! Price_List_Title__c[f] }" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+    </apex:form>
+    
+    <br/>
+    <div style="text-align: center; background-color:white;" >
+        <input type="button" onclick="openDiscountMarkup();" value="Discount/Markup" class="btn btn-default"/>
+        <input type="button" onclick="resetFilters();" value="Reset Filters" class="btn btn-default"/>
+        <input type="button" onclick="save();" value="Save" class="btn btn-default"/>        
+        <input type="button" onclick="returnToRecord();" value="Back to Price List Title" class="btn btn-default"/>
+    </div>
+    
+    <br/>
+    <div ng-app="ngApp" ng-controller="appCtrl">
+        <h1 class="header">Select Products for Update</h1><img id="status" height="16" width="16" src="/img/loading.gif" />
+        <br/>
+        <div class="fromToDate">Purchase Price modify Date: From Date <input type="text" id="PurchasefromDate" style="width:80px" onchange="onDateFilterChange();"></input>  To Date:<input type="text" id="PurchasetoDate" style="width:80px" onchange="onDateFilterChange();"></input></div>
+        <br/>
+        <br/>
+        <div class="fromToDate">Selling Price modify Date: From Date <input type="text" id="SellingfromDate" style="width:80px" onchange="onDateFilterChange();"></input>  To Date:<input type="text" id="SellingtoDate" style="width:80px" onchange="onDateFilterChange();"></input></div>
+        <br/>
+        <br/>
+        <div id="mainDiv" onresize="console.log('test');" style="width: auto;margin:auto;height: 400px; -moz-border-radius: 10px; border-radius: 10px;" class="bootstrap-sf1">
+            
+            <div ag-grid="gridOptions" style="height: 100%;" class="ag-fresh ag-basic"></div>
+            
+        </div>
+    </div>
+    <br/>
+    
+</apex:page>

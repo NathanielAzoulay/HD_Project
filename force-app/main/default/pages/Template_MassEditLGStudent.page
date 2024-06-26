@@ -1,0 +1,52 @@
+<apex:page standardController="LG_Student__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="Name">
+<apex:inputField value="{!a.name}"/>
+</apex:column>
+<apex:column headerValue="LG Student Code">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="Student">
+<apex:outputField value="{!a.Student__c}"/>
+</apex:column>
+<apex:column headerValue="Student Price">
+<apex:inputField value="{!a.Student_Price__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Type">
+<apex:inputField value="{!a.Lesson_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Status in LG">
+<apex:inputField value="{!a.Status_in_LG__c}"/>
+</apex:column>
+<apex:column headerValue="Student Course Start Date">
+<apex:inputField value="{!a.Student_Course_Start_Date__c}"/>
+</apex:column>
+<apex:column headerValue="Student Course End Date">
+<apex:inputField value="{!a.Student_Course_End_Date__c}"/>
+</apex:column>
+<apex:column headerValue="Student Start Paying Date">
+<apex:inputField value="{!a.Student_Start_Paying_Date__c}"/>
+</apex:column>
+<apex:column headerValue="Student End Paying Date">
+<apex:inputField value="{!a.Student_End_Paying_Date__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

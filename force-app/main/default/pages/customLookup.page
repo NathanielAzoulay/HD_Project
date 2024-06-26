@@ -1,0 +1,102 @@
+<apex:page controller="CustomLookupController" title="Search for a user ~ Helen Doron" showHeader="false">
+
+    <style>
+
+        body{
+            background: url("/img/alohaSkin/lookup_bg.png") repeat-x scroll 0 0 #FFFFFF;
+            padding: 0;
+            font-family: Arial,Helvetica,sans-serif;
+            color: #222;
+        }
+        body .bPageTitle{
+         padding: 0px;
+        }
+        .lookup .bPageTitle {
+            margin-bottom: 2px;
+        }
+        body .bPageTitle .pageTitleIcon {
+            margin-top: 0px; 
+            background-position: 0 -1202px!important;
+            background-image: url(/img/sprites/master.png);
+            width:  32px;
+            height: 32px;
+        }
+       body .pBody .btn{
+            padding: 4px 7px!important;
+            margin: 5px!important;
+        }
+        
+        .bPageBlock {
+         border-top: 4px solid #3a6690;
+        }
+        .apexp .bPageBlock.apexDefaultPageBlock .pbBody {
+            margin: 0px;
+        }
+        
+       
+     </style>
+    <apex:form title="Search for a user ~ Helen Doron">
+        <div class="lookup">
+            <div class="bPageTitle">
+                <div class="ptBody secondaryPalette">
+                    <div class="content">
+                     <img src="/img/s.gif" alt="" class="pageTitleIcon" title=""/>
+                     <h1 style="font-size: 1.8em;color: #333435;margin: 0px 0 4px;">Lookup</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="pBody">
+                <label class="assistiveText" for="lksrch">Search</label>
+                <apex:inputText id="lksrch" html-name="lksrch" maxlength="80" size="20" style="margin: 1px 16px 0px 5px!important;" value="{!searchvalue}" html-placeholder="Search...">
+                    <apex:actionSupport event="onkeyup" action="{!onkeyupAction}" reRender="one" />
+                    <apex:actionSupport event="onchange" action="{!onkeyupAction}" reRender="one" />
+                </apex:inputText>
+                <apex:commandButton styleClass="btn" value="Go!" action="{!searchAction}" />
+            <div style="margin-left: 3px;">
+                <label>Search</label>
+                <input checked="checked" id="lkenhmdSEARCH_NAME" name="lkenhmd" type="radio" value="SEARCH_NAME"/>
+                <label for="lkenhmdSEARCH_NAME">Name</label>
+            </div>
+            <div class="bDescription"></div>
+            </div>
+        </div>
+    </apex:form>
+    <apex:form title="Search for a user ~ Helen Doron" id="one">
+        <div style="margin:8px;">
+            <apex:pageBlock title="Users" rendered="{!render1}">
+                <apex:pageMessages ></apex:pageMessages>
+                <apex:pageBlockTable value="{!Records}" var="record">
+                    <apex:column headerValue="Full Name" >
+                        <apex:outputLink value="#" onclick="fillIn('{!record.Name}','{!record.Id}')">{!record.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column value="{!record.Title}"    headerValue="Title" />
+                    <apex:column value="{!record.Phone}"    headerValue="Phone" />
+                    <apex:column value="{!record.UserName}" headerValue="Email" />
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+        </div>   
+    </apex:form>
+    <script>
+        function fillIn(name, id) { 
+            var winMain=window.opener; 
+            if (null==winMain) { 
+                winMain=window.parent.opener; 
+            } 
+            var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}'); 
+            ele.value=name; 
+            ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}'); 
+            ele.value=id; 
+            //winMain.closePopup();
+            winMain.setFranchiseeFilter();
+            winMain.closeLookupPopup(); 
+        } 
+        function CloseWindow() { 
+            var winMain=window.opener; 
+            if (null==winMain) { 
+                winMain=window.parent.opener; 
+            }
+            winMain.setFranchiseeFilter();
+            winMain.closeLookupPopup(); 
+        }
+    </script>
+</apex:page>

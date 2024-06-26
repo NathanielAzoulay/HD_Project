@@ -1,0 +1,1348 @@
+<apex:page standardController="LG_Discount__c" extensions="SPOrZeroMonthlyPaymentController"  standardStylesheets="false" sidebar="false" docType="html-5.0" applyBodyTag="false">
+   
+    <head>
+        <apex:slds />
+        <apex:includeScript value="{!$Resource.ColResizableJquery}"/>
+        <apex:includeScript value="{!$Resource.ColResizable}"/>
+        <script src="../../soap/ajax/38.0/connection.js" type="text/javascript"></script>
+        <script src="../../soap/ajax/38.0/apex.js" type="text/javascript"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <style type="text/css">
+            
+            
+            
+            a.franchisee-looup-width {
+            width:15% !important;
+            }
+            
+            .slds-scope td, .slds-scope th {
+            text-align: center;
+            }
+            
+            #snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 40px;
+            font-size: 17px;
+            }
+            .outer td.oRight {
+            max-width:1000px;
+            }
+            .slds-scope body, .slds-scope:not(html) {
+            font-size: .8125rem;
+            background: 0 0;
+            max-width: 1000px !important;
+            }  
+            #snackbar.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s;
+            animation: fadein 0.5s;
+            }
+            
+            @-webkit-keyframes fadein {
+            from {top: 0; opacity: 0;} 
+            to {top: 40px; opacity: 1;}
+            }
+            
+            @keyframes fadein {
+            from {top: 0; opacity: 0;}
+            to {top: 40px; opacity: 1;}
+            }
+            
+            @-webkit-keyframes fadeout {
+            from {top: 40px; opacity: 1;} 
+            to {top: 0; opacity: 0;}
+            }
+            
+            @keyframes fadeout {
+            from {top: 40px; opacity: 1;}
+            to {top: 0; opacity: 0;}
+            }
+            
+        </style>
+        
+        <!-- Script to resize to Columns -->
+        <script>
+        function columnResizerAction(){
+            (function($){   
+                
+                var d = $(document);        //window object
+                var h = $("head");          //head object
+                var drag = null;            //reference to the current grip that is being dragged
+                var tables = {};            //object of the already processed tables (table.id as key)
+                var count = 0;              //internal count to create unique IDs when needed.  
+                
+                //common strings for packing
+                var ID = "id";  
+                var PX = "px";
+                var SIGNATURE ="JColResizer";
+                var FLEX = "JCLRFlex";
+                
+                //short-cuts
+                var I = parseInt;
+                var M = Math;
+                var ie = navigator.userAgent.indexOf('Trident/4.0')>0;
+                var S;
+                try{S = sessionStorage;}catch(e){}  //Firefox crashes when executed as local file system
+                
+                //append required CSS rules  
+                h.append("<style type='text/css'>  .JColResizer{table-layout:fixed;} .JColResizer > tbody > tr > td, .JColResizer > tbody > tr > th{overflow:hidden;padding-left:0!important; padding-right:0!important;}  .JCLRgrips{ height:0px; position:relative;} .JCLRgrip{margin-left:-5px; position:absolute; z-index:5; } .JCLRgrip .JColResizer{position:absolute;background-color:red;filter:alpha(opacity=1);opacity:0;width:10px;height:100%;cursor: e-resize;top:0px} .JCLRLastGrip{position:absolute; width:1px; } .JCLRgripDrag{ border-left:1px dotted black;  } .JCLRFlex{width:auto!important;} .JCLRgrip.JCLRdisabledGrip .JColResizer{cursor:default; display:none;}</style>");
+                
+                
+                /**
+             * Function to allow column resizing for table objects. It is the starting point to apply the plugin.
+             * @param {DOM node} tb - reference to the DOM table object to be enhanced
+             * @param {Object} options  - some customization values
+             */
+              var init = function( tb, options){  
+                  var t = $(tb);                  //the table object is wrapped
+                  t.opt = options;                //each table has its own options available at anytime
+                  t.mode = options.resizeMode;    //shortcuts
+                  t.dc = t.opt.disabledColumns;
+                  if(t.opt.disable) return destroy(t);                //the user is asking to destroy a previously colResized table
+                  var id = t.id = t.attr(ID) || SIGNATURE+count++;    //its id is obtained, if null new one is generated      
+                  t.p = t.opt.postbackSafe;                           //short-cut to detect postback safe         
+                  if(!t.is("table") || tables[id] && !t.opt.partialRefresh) return;       //if the object is not a table or if it was already processed then it is ignored.
+                  if (t.opt.hoverCursor !== 'e-resize') 
+                      h.append("<style type='text/css'>.JCLRgrip .JColResizer:hover{cursor:"+ t.opt.hoverCursor +"!important}</style>");  //if hoverCursor has been set, append the style
+                  t.addClass(SIGNATURE).attr(ID, id).before('<div class="JCLRgrips"/>');  
+                  t.g = []; t.c = []; t.w = t.width(); t.gc = t.prev(); t.f=t.opt.fixed;              
+                  if(options.marginLeft) t.gc.css("marginLeft", options.marginLeft);      
+                  if(options.marginRight) t.gc.css("marginRight", options.marginRight);   
+                  t.cs = I(ie? tb.cellSpacing || tb.currentStyle.borderSpacing :t.css('border-spacing'))||2;  
+                  t.b  = I(ie? tb.border || tb.currentStyle.borderLeftWidth :t.css('border-left-width'))||1; 
+                  tables[id] = t;  
+                  createGrips(t);
+                  
+              };
+              
+              
+              /**
+             * This function allows to remove any enhancements performed by this plugin on a previously processed table.
+             * @param {jQuery ref} t - table object
+             */
+              var destroy = function(t){
+                  var id=t.attr(ID), t=tables[id];
+                  if(!t||!t.is("table")) return;          
+                  t.removeClass(SIGNATURE+" "+FLEX).gc.remove();
+                  delete tables[id]; 
+              };
+              
+              
+              /**
+             * Function to create all the grips associated with the table given by parameters 
+             * @param {jQuery ref} t - table object
+             */
+              var createGrips = function(t){  
+                  
+                  var th = t.find(">thead>tr:first>th,>thead>tr:first>td"); //table headers are obtained
+                  if(!th.length) th = t.find(">tbody>tr:first>th,>tr:first>th,>tbody>tr:first>td, >tr:first>td");  //but headers can also be included in different ways
+                  th = th.filter(":visible");                 //filter invisible columns
+                  t.cg = t.find("col");                       //a table can also contain a colgroup with col elements     
+                  t.ln = th.length;                           //table length is stored    
+                  if(t.p && S && S[t.id])memento(t,th);       //if 'postbackSafe' is enabled and there is data for the current table, its coloumn layout is restored
+                  th.each(function(i){                        //iterate through the table column headers          
+                      var c = $(this);                        //jquery wrap for the current column        
+                      var dc = t.dc.indexOf(i)!=-1;           //is this a disabled column?
+                      var g = $(t.gc.append('<div class="JCLRgrip"></div>')[0].lastChild); //add the visual node to be used as grip
+                      g.append(dc ? "": t.opt.gripInnerHtml).append('<div class="'+SIGNATURE+'"></div>');
+                      if(i == t.ln-1){                        //if the current grip is the las one 
+                          g.addClass("JCLRLastGrip");         //add a different css class to stlye it in a different way if needed
+                          if(t.f) g.html("");                 //if the table resizing mode is set to fixed, the last grip is removed since table with can not change
+                      }
+                      g.bind('touchstart mousedown', onGripMouseDown); //bind the mousedown event to start dragging 
+                      
+                      if (!dc){ 
+                          //if normal column bind the mousedown event to start dragging, if disabled then apply its css class
+                          g.removeClass('JCLRdisabledGrip').bind('touchstart mousedown', onGripMouseDown);      
+                      }else{
+                          g.addClass('JCLRdisabledGrip'); 
+                      }
+                      
+                      g.t = t; g.i = i; g.c = c;  c.w =c.width();  
+                      t.g.push(g); t.c.push(c);          
+                      c.width(c.w).removeAttr("width");             
+                      g.data(SIGNATURE, {i:i, t:t.attr(ID), last: i == t.ln-1});                                               
+                  });     
+                  t.cg.removeAttr("width");   //remove the width attribute from elements in the colgroup 
+                  
+                  t.find('td, th').not(th).not('table th, table td').each(function(){  
+                      $(this).removeAttr('width');    //the width attribute is removed from all table cells which are not nested in other tables and dont belong to the header
+                  });     
+                  if(!t.f){
+                      t.removeAttr('width').addClass(FLEX); //if not fixed, let the table grow as needed
+                  }
+                  syncGrips(t);  
+              };
+              
+              
+              /**
+             * Function to allow the persistence of columns dimensions after a browser postback. It is based in
+             * the HTML5 sessionStorage object, which can be emulated for older browsers using sessionstorage.js
+             * @param {jQuery ref} t - table object
+             * @param {jQuery ref} th - reference to the first row elements (only set in deserialization)
+             */
+              var memento = function(t, th){ 
+                  var w,m=0,i=0,aux =[],tw;
+                  if(th){                                     //in deserialization mode (after a postback)
+                      t.cg.removeAttr("width");
+                      if(t.opt.flush){ S[t.id] =""; return;}  //if flush is activated, stored data is removed
+                      w = S[t.id].split(";");                 //column widths is obtained
+                      tw = w[t.ln+1];
+                      if(!t.f && tw){                         //if not fixed and table width data available its size is restored
+                          t.width(tw*=1);
+                          if(t.opt.overflow) {                //if overfolw flag is set, restore table width also as table min-width
+                              t.css('min-width', tw + PX);
+                              t.w = tw;
+                          }
+                      }
+                      for(;i<t.ln;i++){                       //for each column
+                          aux.push(100*w[i]/w[t.ln]+"%");     //width is stored in an array since it will be required again a couple of lines ahead
+                          th.eq(i).css("width", aux[i] );     //each column width in % is restored
+                      }           
+                      for(i=0;i<t.ln;i++)
+                          t.cg.eq(i).css("width", aux[i]);    //this code is required in order to create an inline CSS rule with higher precedence than an existing CSS class in the "col" elements
+                  }else{                          //in serialization mode (after resizing a column)
+                      S[t.id] ="";                //clean up previous data
+                      for(;i < t.c.length; i++){  //iterate through columns
+                          w = t.c[i].width();     //width is obtained
+                          S[t.id] += w+";";       //width is appended to the sessionStorage object using ID as key
+                          m+=w;                   //carriage is updated to obtain the full size used by columns
+                      }
+                      S[t.id]+=m;                      
+                      //to be able to obtain % width value of each columns while deserializing
+                      if(!t.f) S[t.id] += ";"+t.width();  //if not fixed, table width is stored
+                  }   
+              };
+              
+              
+              /**
+             * Function that places each grip in the correct position according to the current table layout  
+             * @param {jQuery ref} t - table object
+             */
+              var syncGrips = function (t){   
+                  t.gc.width(t.w);                      
+                  for(var i=0; i<t.ln; i++){  //for each column
+                      var c = t.c[i];             
+                      t.g[i].css({            //height and position of the grip is updated according to the table layout
+                          left: c.offset().left - t.offset().left + c.outerWidth(false) + t.cs / 2 + PX,
+                          height: t.opt.headerOnly? t.c[0].outerHeight(false) : t.outerHeight(false)              
+                      });         
+                  }   
+              };
+              
+              
+              
+              /**
+            * This function updates columns width according to the horizontal position increment of the grip being
+            * dragged. The function can be called while dragging if liveDragging is enabled and also from the onGripDragOver
+            * event handler to synchronize grips position with their related columns.
+            * @param {jQuery ref} t - table object
+            * @param {number} i - index of the grip being dragged
+            * @param {bool} isOver - to identify when the function is being called from the onGripDragOver event    
+            */
+              var syncCols = function(t,i,isOver){
+                  var inc = drag.x-drag.l, c = t.c[i], c2 = t.c[i+1];             
+                  var w = c.w + inc;  var w2= c2.w- inc;  //their new width is obtained                   
+                  c.width( w + PX);           
+                  t.cg.eq(i).width( w + PX); 
+                  if(t.f){ //if fixed mode
+                      c2.width(w2 + PX);
+                      t.cg.eq(i+1).width( w2 + PX);
+                  }else if(t.opt.overflow) {              //if overflow is set, incriment min-width to force overflow
+                      t.css('min-width', t.w + inc);
+                  }
+                  if(isOver){
+                      c.w=w; 
+                      c2.w= t.f ? w2 : c2.w;
+                  }
+              };
+              
+              
+              /**
+            * This function updates all columns width according to its real width. It must be taken into account that the 
+            * sum of all columns can exceed the table width in some cases (if fixed is set to false and table has some kind 
+            * of max-width).
+            * @param {jQuery ref} t - table object  
+            */
+              var applyBounds = function(t){
+                  var w = $.map(t.c, function(c){         //obtain real widths
+                      return c.width();
+                  });
+                  t.width(t.w = t.width()).removeClass(FLEX); //prevent table width changes
+                  $.each(t.c, function(i,c){
+                      c.width(w[i]).w = w[i];           
+                  });
+                  t.addClass(FLEX);                       //allow table width changes
+              };
+              
+              
+              /**
+             * Event handler used while dragging a grip. It checks if the next grip position is valid and updates it. 
+             * @param {event} e - mousemove event binded to the window object
+             */
+              var onGripDrag = function(e){   
+                  if(!drag) return; 
+                  var t = drag.t;     //table object reference 
+                  var oe = e.originalEvent.touches;
+                  var ox = oe ? oe[0].pageX : e.pageX;    //original position (touch or mouse)
+                  var x =  ox - drag.ox + drag.l;         //next position according to horizontal mouse position increment
+                  var mw = t.opt.minWidth, i = drag.i ;   //cell min width
+                  var l = t.cs*1.5 + mw + t.b;
+                  var last = i == t.ln-1;                             //check if it is the last column grip (usually hidden)
+                  var min = i? t.g[i-1].position().left+t.cs+mw: l;   //min position according to the contiguous cells
+                  var max = t.f ?     //fixed mode?
+                      i == t.ln-1? 
+                      t.w-l: 
+                  t.g[i+1].position().left-t.cs-mw:
+                  Infinity;                               //max position according to the contiguous cells 
+                  x = M.max(min, M.min(max, x));              //apply bounding        
+                  drag.x = x;  drag.css("left",  x + PX);     //apply position increment  
+                  if(last){                                   //if it is the last grip
+                      var c = t.c[drag.i];                    //width of the last column is obtained
+                      drag.w = c.w + x- drag.l;         
+                  }              
+                  if(t.opt.liveDrag){             //if liveDrag is enabled
+                      if(last){
+                          c.width(drag.w);
+                          if(!t.f && t.opt.overflow){         //if overflow is set, incriment min-width to force overflow
+                              t.css('min-width', t.w + x - drag.l);
+                          }else {
+                              t.w = t.width();
+                          }
+                      }else{
+                          syncCols(t,i);          //columns are synchronized
+                      }
+                      syncGrips(t);
+                      var cb = t.opt.onDrag;                          //check if there is an onDrag callback
+                      if (cb) { e.currentTarget = t[0]; cb(e); }      //if any, it is fired           
+                  }
+                  return false;   //prevent text selection while dragging             
+              };
+              
+              
+              /**
+             * Event handler fired when the dragging is over, updating table layout
+             * @param {event} e - grip drag over event
+             */
+              var onGripDragOver = function(e){   
+                  
+                  d.unbind('touchend.'+SIGNATURE+' mouseup.'+SIGNATURE).unbind('touchmove.'+SIGNATURE+' mousemove.'+SIGNATURE);
+                  $("head :last-child").remove();                 //remove the dragging cursor style  
+                  if(!drag) return;
+                  drag.removeClass(drag.t.opt.draggingClass);     //remove the grip dragging css-class
+                  if (!(drag.x - drag.l == 0)) {
+                      var t = drag.t;
+                      var cb = t.opt.onResize;        //get some values   
+                      var i = drag.i;                 //column index
+                      var last = i == t.ln-1;         //check if it is the last column grip (usually hidden)
+                      var c = t.g[i].c;               //the column being dragged
+                      if(last){
+                          c.width(drag.w);
+                          c.w = drag.w;
+                      }else{
+                          syncCols(t, i, true);   //the columns are updated
+                      }
+                      if(!t.f) applyBounds(t);    //if not fixed mode, then apply bounds to obtain real width values
+                      syncGrips(t);               //the grips are updated
+                      if (cb) { e.currentTarget = t[0]; cb(e); }  //if there is a callback function, it is fired
+                      if(t.p && S) memento(t);    //if postbackSafe is enabled and there is sessionStorage support, the new layout is serialized and stored
+                  }
+                  drag = null;   //since the grip dragging is over                                  
+              };  
+              
+              
+              /**
+             * Event handler fired when the grip dragging is about to start. Its main goal is to set up events 
+             * and store some values used while dragging.
+             * @param {event} e - grip mousedown event
+             */
+              var onGripMouseDown = function(e){
+                  var o = $(this).data(SIGNATURE);            //retrieve grip data
+                  var t = tables[o.t],  g = t.g[o.i];         //shortcuts for the table and grip objects
+                  var oe = e.originalEvent.touches;           //touch or mouse event?
+                  g.ox = oe? oe[0].pageX: e.pageX;            //the initial position is kept
+                  g.l = g.position().left;
+                  g.x = g.l;
+                  
+                  d.bind('touchmove.'+SIGNATURE+' mousemove.'+SIGNATURE, onGripDrag ).bind('touchend.'+SIGNATURE+' mouseup.'+SIGNATURE, onGripDragOver);  //mousemove and mouseup events are bound
+                  h.append("<style type='text/css'>*{cursor:"+ t.opt.dragCursor +"!important}</style>");  //change the mouse cursor
+                  g.addClass(t.opt.draggingClass);    //add the dragging class (to allow some visual feedback)                
+                  drag = g;                           //the current grip is stored as the current dragging object
+                  if(t.c[o.i].l) for(var i=0,c; i<t.ln; i++){ c=t.c[i]; c.l = false; c.w= c.width(); }    //if the colum is locked (after browser resize), then c.w must be updated       
+                  return false;   //prevent text selection
+              };
+              
+              
+              /**
+             * Event handler fired when the browser is resized. The main purpose of this function is to update
+             * table layout according to the browser size synchronizing related grips 
+             */
+              var onResize = function(){
+                  for(var t in tables){
+                      if( tables.hasOwnProperty( t ) ) {
+                          t = tables[t];
+                          var i, mw=0;
+                          t.removeClass(SIGNATURE);   //firefox doesn like layout-fixed in some cases
+                          if (t.f) {                  //in fixed mode
+                              t.w = t.width();        //its new width is kept
+                              for(i=0; i<t.ln; i++) mw+= t.c[i].w;   
+                              for(i=0; i<t.ln; i++) t.c[i].css("width", M.round(1000*t.c[i].w/mw)/10 + "%").l=true; 
+                              
+                          }else{ 
+                              applyBounds(t);         //apply the new bounds 
+                              if(t.mode == 'flex' && t.p && S){   //if postbackSafe is enabled and there is sessionStorage support,
+                                  memento(t);                     //the new layout is serialized and stored for 'flex' tables
+                              }
+                          }
+                          syncGrips(t.addClass(SIGNATURE));
+                      }
+                  } 
+                  
+              };      
+              
+              
+              //bind resize event, to update grips position 
+              $(window).bind('resize.'+SIGNATURE, onResize); 
+              
+              
+              /**
+             * The plugin is added to the jQuery library
+             * @param {Object} options -  an object that holds some basic customization values 
+             */
+              $.fn.extend({  
+                  colResizable: function(options) {           
+                      var defaults = {
+                          
+                          //attributes:
+                          
+                          resizeMode: 'fit',                   
+                          draggingClass: 'JCLRgripDrag', 
+                          gripInnerHtml: '',                           
+                          liveDrag: false,                 
+                          minWidth: 15,                    
+                          headerOnly: false,              
+                          hoverCursor: "e-resize",        
+                          dragCursor: "e-resize",         
+                          postbackSafe: false,           
+                          flush: false,                  
+                          marginLeft: null,               
+                          marginRight: null,              
+                          disable: false,                  
+                          partialRefresh: false,          
+                          disabledColumns: [],            
+                          
+                          //events:
+                          onDrag: null,                   
+                          onResize: null                  
+                      }           
+                      var options =  $.extend(defaults, options); 
+                      options.fixed = true;
+                      options.overflow = false;
+                      switch(options.resizeMode){
+                          case 'flex': options.fixed = false; break;
+                          case 'overflow': options.fixed = false; options.overflow = true; break;
+                      }
+                      
+                      return this.each(function() {               
+                          init( this, options);             
+                      });
+                  }
+              });
+          })(jQuery);
+           
+       }
+       </script>
+       <!-- Script to resize to Columns Ends Here -->
+       
+       
+       <script>
+       
+       function broadenColumn(){ 
+           
+           /*********** Function to broden column *************/
+           $(function() { 
+               console.log($("#table-custom-lgSp"));
+               
+               $("#table-custom-lgSp").colResizable({
+                   liveDrag:true, 
+                   gripInnerHtml:'<div class="slds-resizable"><span class="slds-resizable__handle" style="width: 0rem!important;"></span></div>',
+                   draggingClass:"dragging",
+                   resizeMode:'overflow'
+               });
+           });
+           
+           /*********** Function to broden column Ends *************/          
+       }
+       columnResizerAction();
+       broadenColumn();
+       var isShowPopup = false;
+       
+       var newWin=null;
+       function openLookupPopup(name,id)
+       {
+           var selectedIds = '{!selectedIds}';
+           var pname = $('[id$="cName"]').val();
+           var pId   = $('[id$="SpecialFranchisee"]').val();
+           var ApiEnterpriseURL350 = '{!$Api.Enterprise_Server_URL_350}';
+           if(ApiEnterpriseURL350.indexOf('/HDC')!=-1){
+               newWin=window.open('/HDC/apex/customLookup?namefield=' + name + '&idfield=' + id + '&parentname=' + pname + '&parentid=' + pId + '&SelectedIds=' + selectedIds + '&s=1','Popup','directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=600,height=500');
+           }
+           else
+               newWin=window.open('/apex/customLookup?namefield=' + name + '&idfield=' + id + '&parentname=' + pname + '&parentid=' + pId + '&SelectedIds=' + selectedIds + '&s=1','Popup','directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=600,height=500');
+           
+           if (window.focus)
+           {
+               newWin.focus();
+           }
+           
+           return false;
+       }
+       
+       function closeLookupPopup()
+       {
+           if (null!=newWin)
+           {
+               newWin.close();
+           }
+       }
+       
+       function setFranchiseeFilter(){
+           lgspsOnChange();
+       }
+       
+       function lgspsOnChange(){
+           if(($('[id$="SpecialRecordType"]').val()) == '' && ($('[id$="cName"]').val()) == '' && ($('[id$="SpecialDiscountType"]').val()) == ''){             
+               $('[id$="SpecialFranchisee"]').val('');
+               document.getElementById( 'filter-warning-popup-modal' ).style.display    = 'block';  
+           }
+           else{
+               document.getElementById( 'loadingImageIcon' ).style.display    = 'block';
+               searchLgSps();   
+           }
+       }
+       
+       function closeFilterWarningPopup(){
+           document.getElementById( 'filter-warning-popup-modal' ).style.display    = 'none';
+           clearAllFilters();
+       }
+       
+       function franchiseeChange(){
+           if(($('[id$="cName"]').val()) == '')
+               lgspsOnChange();
+       }
+       
+       function disableSpTOnZeroPrice(){
+           var specialRecordType= $('[id$="SpecialRecordType"]').val();
+           if(specialRecordType == 'Zero Monthly Payment'){
+               $('[id$="SpecialDiscountType"]').val('');
+               $('[id$="SpecialDiscountType"]').attr("disabled","true");
+           }
+           else{
+               $('[id$="SpecialDiscountType"]').removeAttr("disabled");
+           }
+           lgspsOnChange();
+           console.log('---specialRecordType---',specialRecordType);
+       }
+       
+       function spTypeChange(){
+           lgspsOnChange();
+       }
+       
+       
+       /*********** Method to check whether a particular checkbox is checked *************/
+       
+       function selectOrDeselect(){
+           var inputElem  = document.getElementsByClassName('custom-checkboxes');
+           var allCheck   = document.getElementById('checkbox_all');
+           var allChecked = true;
+           for(var i=0; i<inputElem.length; i++)
+           {
+               console.log("checkedval___",inputElem[i].checked);
+               if(inputElem[i].checked == false){
+                   allChecked = false;
+                   break;
+               }
+           }
+           allCheck.checked = allChecked;
+       }
+       
+       
+       function reflectChangeToMirrorField(t, className){
+           $('.' + className).prop('checked', t);
+           
+           selectOrDeselect(); 
+           var row = $("#"+className).parent().parent().parent();
+           if(t){
+               var req1 = $(row).find('.Requested_Course_Price__c_div');
+               var app1 = $(row).find('.Approved_Course_Price__c_input');
+               if(req1 !=undefined){
+                   req1 = req1.text().replace(/[^0-9$.,]/g, '');
+                   $(app1).addClass('approved');
+                   if(app1 !=undefined && $(app1).attr('class') !=undefined){            
+                       var classes = $(app1).attr('class');
+                       console.log("______modified___",classes.indexOf('modified'));
+                       if(classes.indexOf('modified') ==-1){
+                           console.log("______$(app1).val()___",$(app1).val());
+                           $(app1).val(req1);
+                       }
+                       else
+                           $(app1).removeClass('modified');
+                   }
+                   
+               }
+               
+               var req2 = $(row).find('.Requested_Price_per_Month__c_div');
+               var app2 = $(row).find('.Approved_Price_per_Month__c_input');
+               if(req2 !=undefined){
+                   req2 = req2.text().replace(/[^0-9$.,]/g, '');
+                   $(app2).addClass('approved');
+                   if(app2 !=undefined && $(app2).attr('class') !=undefined){            
+                       var classes = $(app2).attr('class');
+                       //console.log(classes.indexOf('modified'));
+                       if(classes.indexOf('modified')==-1 || $(app2).val() != ''){
+                           $(app2).val(req2);
+                       }
+                       else
+                           $(app2).removeClass('modified');
+                   }
+                   
+               }
+               
+               var req3 = $(row).find('.Requested_Price_per_Session__c_div');
+               var app3 = $(row).find('.Approved_Price_per_Session__c_input');
+               if(req3 !=undefined){
+                   req3 = req3.text().replace(/[^0-9$.,]/g, '');
+                   $(app3).addClass('approved');
+                   if(app3 !=undefined && $(app3).attr('class') !=undefined){            
+                       var classes = $(app3).attr('class');
+                       //console.log(classes.indexOf('modified'));
+                       if(classes.indexOf('modified')==-1 || $(app3).val() != ''){
+                           $(app3).val(req3);
+                       }
+                       else
+                           $(app3).removeClass('modified');
+                   }
+                   
+               }
+               
+           }
+           else if($(row).find('.apprivedFields') != undefined){
+               /*$(row).find('.apprivedFields').val('');*/
+           }
+           
+           if(t == false){
+               isShowPopup = false;
+           }
+           
+           
+       }
+       
+       /*********** Method to check whether all checkboxes are checked *************/
+       function checkAll(ele){
+           var checkboxes = document.getElementsByClassName('custom-checkboxes');
+           if (ele.checked) {
+               for (var i = 0; i < checkboxes.length; i++) {
+                   if (checkboxes[i].type == 'checkbox') {
+                       checkboxes[i].checked = true;
+                       reflectChangeToMirrorField(checkboxes[i].checked, checkboxes[i].id);
+                   }
+               }
+           } else {
+               for (var i = 0; i < checkboxes.length; i++) {
+                   console.log(i)
+                   if (checkboxes[i].type == 'checkbox') {
+                       checkboxes[i].checked = false;
+                       reflectChangeToMirrorField(checkboxes[i].checked, checkboxes[i].id);
+                   }
+               }
+           }
+           
+       }
+       
+       
+       function closeWarningPopup(){
+           $('h2#infoPopupHeader').text('');
+           $('#warning-modal-content-data h1:first-child').text('');
+           document.getElementById( 'warning-popup-modal' ).style.display    = 'none';
+       }
+        
+       function checkNoSelectedRows(){
+           var inputElem   = document.getElementsByClassName('custom-checkboxes');
+           var noneChecked = true;
+           
+           for(var i=0; i<inputElem.length; i++)
+           {
+               
+               if(inputElem[i].checked == true){
+                   noneChecked = false;
+                   break;
+               }
+               
+           }
+           return noneChecked;
+       }
+       
+       function countSelectedRows(){
+           var inputElem    = document.getElementsByClassName('custom-checkboxes');
+           var selectedItem = 0;
+           
+           for(var i=0; i<inputElem.length; i++)
+           {
+               
+               if(inputElem[i].checked == true){
+                   selectedItem++;
+               }
+               
+           }
+           return selectedItem;
+       }
+       
+       function toShowOrHideToast(requestCount,reqStatus){
+           var x = document.getElementById("snackbar");
+           x.className = "show";
+           if(requestCount == 1)
+               x.innerHTML = 'The request has been '+reqStatus+'.';
+           else if(requestCount > 1)
+               x.innerHTML = 'The requests have been '+reqStatus+'.';
+           setTimeout(function(){ x.className = x.className.replace("show", ""); x.innerHTML = ''; }, 7000);
+       }
+       
+       
+       /*** Approve Request ****/
+       
+       var noOfRequest = 0;
+       var reqStatus = '';
+       //Updated By-: Shivram Saini    Date-: 28 Nov 2018    Task-000001963
+
+       function approveLgSpriceRequest(){
+           var EntireCourseDiscountType = document.getElementsByClassName('custom-checkboxes');
+           var numEntireCourseDiscountType = 0;
+           for(var i=0; i< EntireCourseDiscountType.length; i++){
+               if(EntireCourseDiscountType[i].getAttribute('data-special-price-type') == 'Entire Course' && EntireCourseDiscountType[i].checked == true)
+                   numEntireCourseDiscountType++;
+           }
+           
+           var noneChecked  = checkNoSelectedRows();
+           noOfRequest  = countSelectedRows();
+           console.log("noOfRequest_______",noOfRequest);
+           reqStatus    = "Approved";
+           if(noneChecked){
+               isShowPopup = false;
+               $('h2#infoPopupHeader').append("Warning!");
+               $('#warning-modal-content-data h1:first-child').append("Please select atleast one request.");
+               document.getElementById( 'warning-popup-modal' ).style.display    = 'block';
+           }
+           else{
+               isShowPopup = true;
+               if(numEntireCourseDiscountType > 10){
+                   $('h1#ApproveRejectModal-heading').append("Ooops... A maximum of 10 requests of type Entire Course can be processed at once. Please reduce the number of selected requests and repeat the process for the remaining ones"); 
+                   $('#approveOrRejectLSPRequestButton').hide();
+               }else{
+                   $('#approveOrRejectLSPRequestButton').show();
+                   if(noOfRequest == 1){
+                       $('h1#ApproveRejectModal-heading').append("Are you sure you want to <b>Approve</b> the request?");  
+                   }else if(noOfRequest > 1){
+                       $('h1#ApproveRejectModal-heading').append("Are you sure you want to <b>Approve</b> all of the requests?");  
+                   }  
+                     
+               }
+               
+               document.getElementById( 'ApproveReject-custom-popup' ).style.display    = 'block';
+           }
+       }
+       
+       function rejectLgSpriceRequest(){
+           var noneChecked  = checkNoSelectedRows();
+           noOfRequest  = countSelectedRows();
+           reqStatus    = "Rejected";
+           if(noneChecked){
+               isShowPopup = false;
+               $('h2#infoPopupHeader').append("Warning!");
+               $('#warning-modal-content-data h1:first-child').append("Please select atleast one request.");
+               document.getElementById( 'warning-popup-modal' ).style.display    = 'block';
+           }
+           else{
+               isShowPopup = true;
+               if( noOfRequest == 1){
+                   $('h1#ApproveRejectModal-heading').append("Are you sure you want to <b>Reject</b> the request?");  
+               }
+               else if(noOfRequest > 1){
+                   $('h1#ApproveRejectModal-heading').append("Are you sure you want to <b>Reject</b> all of the requests?");  
+               }
+               document.getElementById( 'ApproveReject-custom-popup' ).style.display    = 'block';
+           }
+       }
+       
+       
+       function closeApproveOrRejectPopup(){
+           $('h1#ApproveRejectModal-heading').text('');
+           document.getElementById( 'ApproveReject-custom-popup' ).style.display    = 'none';
+       }
+       
+       function approveOrRejectRequests(){
+           
+           document.getElementById( 'loadingImageIcon' ).style.display    = 'block';
+           document.getElementById( 'ApproveReject-custom-popup' ).style.display    = 'none';
+           if(reqStatus == "Approved"){
+               approveLgs();
+           }
+           else if(reqStatus == "Rejected"){
+               rejectLgs();
+           }   
+           
+       }
+       
+       function afterApprovingLgsps(isError){
+           document.getElementById( 'loadingImageIcon' ).style.display    = 'none';
+           console.log('noOfRequest:::::::---',noOfRequest);
+           console.log("---reqStatus after-----",reqStatus);
+           console.log('isError-------',isError);
+           if(isError == 'false'){
+               toShowOrHideToast(noOfRequest,reqStatus);
+           } 
+       }
+       
+       function afterRejectingLgsps(isError){
+           document.getElementById( 'loadingImageIcon' ).style.display    = 'none';
+           console.log('noOfRequest:::::::---',noOfRequest);
+           console.log('isError-------',isError);
+           if(isError == 'false'){
+               toShowOrHideToast(noOfRequest,reqStatus);
+           } 
+       }
+       
+       
+       /**** Approve and Reject Functionality ends here *******/
+       
+       function openReturnPopup(){
+           var inputElem     = document.getElementsByClassName('custom-checkboxes');
+           var isNotSelected = true;
+           
+           for(var i=0; i<inputElem.length; i++)
+           {
+               
+               if(inputElem[i].checked == true){
+                   isNotSelected = false;
+                   break;
+               }
+               
+           }
+           
+           if(isShowPopup == true || isNotSelected == false)
+               document.getElementById( 'return-custom-popup' ).style.display    = 'block';
+           else{
+               directExit();
+               isShowPopup = false;
+               isNotSelected = true;
+           }
+           
+       }
+       
+       function closeReturnPopup(){
+           document.getElementById( 'return-custom-popup' ).style.display    = 'none';  
+       }
+       
+       function checkChangesMade(eleId,elem,fieldName){
+           selectOrDeselect();
+           var row = $("#"+eleId).parent().parent().parent();
+           $('#' + eleId).prop('checked', true);
+           $('.' + eleId).prop('checked', true);
+           
+           
+           var app1 = $(row).find('.Approved_Course_Price__c_input');
+           $(app1).removeClass("approved");
+           if(fieldName !='Approved_Course_Price__c'){
+               var req1 = $(row).find('.Requested_Course_Price__c_div');
+               if(req1 !=undefined){
+                   req1 = req1.text().replace(/[^0-9$.,]/g, '');
+                   if(app1 !=undefined && $(app1).attr('class') !=undefined){
+                       
+                       var classes = $(app1).attr('class');
+                       console.log(classes.indexOf('modified'));
+                       if(classes.indexOf('modified')==-1){
+                           $(app1).val(req1);
+                           
+                       }
+                       /*else
+                        $(app1).removeClass('modified');*/
+                   }
+                   
+               }
+           }else if(app1 !=undefined){
+               $(app1).addClass('modified');
+           }
+           
+           var app2 = $(row).find('.Approved_Price_per_Month__c_input');
+           $(app2).removeClass("approved");
+           if(fieldName !='Approved_Price_per_Month__c'){    
+               var req1 = $(row).find('.Requested_Price_per_Month__c_div');
+               
+               if(req1 !=undefined){
+                   req1 = req1.text().replace(/[^0-9$.,]/g, '');
+                   if(app1 !=undefined && $(app2).attr('class') !=undefined){
+                       
+                       var classes = $(app2).attr('class');
+                       if(classes.indexOf('modified')==-1){
+                           $(app2).val(req1);
+                       }
+                   }
+                   
+               }
+           }else if(app2 !=undefined){
+               $(app2).addClass('modified');
+           }
+           
+           var app3 = $(row).find('.Approved_Price_per_Session__c_input');
+           $(app3).removeClass("approved");
+           if(fieldName !='Approved_Price_per_Session__c'){     
+               var req1 = $(row).find('.Requested_Price_per_Session__c_div');
+               
+               if(req1 !=undefined){
+                   req1 = req1.text().replace(/[^0-9$.,]/g, '');
+                   if(app3 !=undefined && $(app3).attr('class') !=undefined){
+                       
+                       var classes = $(app3).attr('class');
+                       if(classes.indexOf('modified')==-1){
+                           $(app3).val(req1);
+                       }
+                   }
+                   
+               }
+           }else if(app3 !=undefined){
+               $(app3).addClass('modified');
+           }
+           
+           isShowPopup   = true;
+       }
+       
+       function goToPrevious(){
+           document.getElementById( 'return-custom-popup' ).style.display    = 'none';
+           directExit();
+       }
+       
+       
+       var sortOrder = 'D';
+       function sortTable(sortingColumn,ele){
+           document.getElementById( 'loadingImageIcon' ).style.display    = 'block';
+           var orderOfSort;
+           var columnId = ele.id;
+           sortOrder = columnId.substring(0,1);
+           if(sortOrder == 'D'){
+               orderOfSort = 'DESC';
+           }
+           else{
+               orderOfSort = 'ASC';
+           }
+           orderOfSort     = (orderOfSort == 'ASC')? 'DESC' : 'ASC';
+           /*console.log('orderOfSort----',orderOfSort);
+            console.log('columnId ----',columnId);
+            console.log('sortOrder ----',sortOrder);*/
+           sortTableByColumn(sortingColumn,orderOfSort);
+           
+       }
+       
+       function afterSorting(){
+           document.getElementById( 'loadingImageIcon' ).style.display    = 'none';
+           if(sortOrder == 'D'){
+               $( ".arrowDownId" ).css( "display", "none" );
+               $( ".arrowUpId" ).css( "display", "block" );
+           }
+           else{
+               $( ".arrowDownId" ).css( "display", "block" );
+               $( ".arrowUpId" ).css( "display", "none" );
+           }
+       }
+       
+       function showlstDetails(month, year, discountType, recordtype, studentcode, studentname, row){
+               var tooltipele = '';
+               //var parentDiv = document.createElement('div');
+               document.getElementById('tooltipOfLGSpecial').style.display = '';
+               /*
+               tooltipele += '<div class="slds-popover slds-popover_tooltip slds-nubbin_bottom-left" role="tooltip" id="help" style="position: absolute; top: 0px; left: 15px;">'; 
+               tooltipele += '<div class="slds-popover__body">';
+               
+               if(discountType == 'One Time (Month)' && studentcode == ''){
+                   tooltipele += '<b>Month:</b> '+month+'<br/>';
+                   tooltipele += '<b>Year:</b> '+year+'<br/>';
+               }else if(discountType == 'One Time (Month)' && studentcode != ''){
+                   tooltipele += '<b>Student Code:</b> '+studentcode+'<br/>';
+                   tooltipele += '<b>Month:</b> '+month+'<br/>';
+                   tooltipele += '<b>Year:</b> '+year+'<br/>';
+               }
+                   
+               tooltipele += '</div>';
+               tooltipele += '</div>';
+               parentDiv.innerHTML = tooltipele;
+               document.getElementById('tooltipOfLGSpecial').appendChild(parentDiv);
+               */
+               if(discountType == 'One Time (Month)' && studentcode == ''){
+                   tooltipele += 'Month: '+month;
+                   tooltipele += ' | ';
+                   tooltipele += 'Year: '+year;
+               }else if(discountType == 'One Time (Month)' && studentcode != ''){
+                   tooltipele += 'Student Code: '+studentcode;
+                   tooltipele += ' | ';
+                   tooltipele += 'Student Name: '+studentname;
+                   tooltipele += ' | ';
+                   tooltipele += 'Month: '+month;
+                   tooltipele += ' | ';
+                   tooltipele += 'Year: '+year;
+               }else if(discountType == 'Entire Course' && studentcode != ''){
+                   tooltipele += 'Student Code: '+studentcode;
+                   tooltipele += ' | ';
+                   tooltipele += 'Student Name: '+studentname;  
+               }
+               
+               tooltipele = tooltipele.toString();
+               jQuery(row).closest('div').attr("title",tooltipele);
+            
+       }
+       function hideTooltip(){
+           document.getElementById('tooltipOfLGSpecial').style.display = 'none';    
+       }
+       
+       </script>
+       <apex:outputPanel id="renderSize">
+           <script>
+           function hidePopup(){
+               console.log('hide popup method');
+               //disableSpTOnZeroPrice();
+               if( $('[id$="SpecialRecordType"]').val() == 'Zero Monthly Payment'){
+                   $('[id$="SpecialDiscountType"]').val('');
+                   $('[id$="SpecialDiscountType"]').attr("disabled","true");
+               }
+               document.getElementById('loadingImageIcon').style.display    = 'none';
+               var lstLength = '{!lstLgSpecialPrice.size}';
+               if(lstLength > 0){
+                   var x = document.getElementById("snackbar");
+                   x.className = "show";
+                   if(lstLength == 1)
+                       x.innerHTML = '1 request was found';
+                   else if(lstLength > 1)
+                       x.innerHTML = lstLength +' requests were found';
+                   setTimeout(function(){ x.className = x.className.replace("show", ""); x.innerHTML = ''; }, 7000);
+                   
+               } 
+               else{
+                   var x = document.getElementById("snackbar");
+                   x.className = "show";
+                   x.innerHTML = 'No request was found';
+                   setTimeout(function(){ x.className = x.className.replace("show", ""); x.innerHTML = ''; }, 7000);
+                   
+               } 
+           }
+           
+           </script>
+       </apex:outputPanel>
+       
+    </head>
+    <body>
+        
+        <!--Toast Popup After Search -->
+        <div id="snackbar"></div>
+        
+        <!--Filter Warning Popup starts here -->
+        
+        <div class="demo-only" style="height: 640px;display:none" id="filter-warning-popup-modal">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button onclick="closeFilterWarningPopup(); return false;" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close">
+                            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                <use href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="infoPopupHeader" class="slds-text-heading_medium slds-hyphenate">Warning!</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <center><h1 style="font-size:1rem;font-weight:600">Please make sure you have selected the filter.</h1></center>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_brand" onclick="closeFilterWarningPopup(); return false;">Ok</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open" id="backdrop"></div>
+        </div>
+        
+        <!-- Warning Popup starts here -->
+        
+        <div class="demo-only" style="height: 640px;display:none" id="warning-popup-modal">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button onclick="closeWarningPopup(); return false;" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close">
+                            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                <use href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}"></use>
+                            </svg>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="infoPopupHeader" class="slds-text-heading_medium slds-hyphenate"></h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="warning-modal-content-data">
+                        <center><h1 style="font-size:1rem;font-weight:600"></h1></center>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_brand" onclick="closeWarningPopup(); return false;">Ok</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open" id="backdrop"></div>
+        </div>
+        
+        <apex:form id="saveSpecialPrice">
+            <script>
+            /*********** Function to broden column *************/
+            columnResizerAction();
+            broadenColumn();
+            
+            $(function() { 
+                $('[id$="SpecialFranchisee"]').addClass('slds-input');
+                $('[id$="SpecialFranchisee"]').css('width', '40%');
+                $('[id$="SpecialFranchisee_mlktp"]').addClass('slds-input');
+                $('[id$="SpecialFranchisee_mlktp"]').css({'width': '40%','margin-left':'5px','margin-right':'5px'});
+                $('[id$="SpecialFranchisee_lkwgt"]').addClass('slds-input');
+                $('[id$="SpecialFranchisee_lkwgt"]').css({'width': '15%'});   
+            });      
+            
+            /*********** Function to broden column Ends *************/          
+            </script>
+            <apex:pagemessages />
+            <!-- <apex:actionFunction name="makeChangesToafields"  action="{!makeChangesToApFields}"   reRender="saveSpecialPrice,renderSize" />  -->
+            <apex:actionFunction name="searchLgSps"       action="{!searchLGSpecialPrice}"   reRender="saveSpecialPrice,renderSize" oncomplete="hidePopup()"/>
+            <apex:actionFunction name="clearAllFilters"   action="{!resetLGSpecialPrice}"    />
+            
+            <apex:actionFunction name="approveLgs" action="{!approveLgsPrice}" reRender="saveSpecialPrice" oncomplete="afterApprovingLgsps('{!isError}')">
+              
+            </apex:actionFunction>
+            <apex:actionFunction name="rejectLgs"  action="{!rejectLgsPrice}" reRender="saveSpecialPrice" oncomplete="afterRejectingLgsps('{!isError}')">
+              
+            </apex:actionFunction>
+            
+            
+            <apex:actionFunction name="directExit"        action="{!exitToPrevious}"         reRender="saveSpecialPrice"/>
+            <apex:actionFunction name="sortTableByColumn" action="{!sortTableByDirection}"   reRender="saveSpecialPrice" oncomplete="afterSorting()">
+                <apex:param name="firstParam"  assignTo="{!sortingExpression}" value="" />
+                <apex:param name="secondParam" assignTo="{!directionOfSort}"   value="" />
+            </apex:actionFunction>
+            <!--<apex:actionFunction name="updateSpecialPrices" action="{!updateLgSprice}" immediate="true" reRender="saveSpecialPrice"/>-->
+            <div id="loadingImageIcon" class="demo-only demo--inverse" style="display:none;">
+                <div class="slds-spinner_container slds-is-fixed">
+                    <div role="status" class="" style="top: 40%;position: absolute;left: 50%">
+                        <span class="slds-assistive-text">Loading</span>
+                        <center><apex:image url="{!$Resource.loadingSpinnerImage}" width="100" height="100"/></center>
+                    </div>
+                </div>
+            </div>
+            
+            
+            
+            <!-- Approve/ Reject popup with new functionality -->
+            <div class="demo-only" style="height: 640px;display:none;" id="ApproveReject-custom-popup">
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button onclick="closeApproveOrRejectPopup(); return false;" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close">
+                                <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                    <use href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}" ></use>
+                                </svg>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Just a moment!</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            <center><h1 id="ApproveRejectModal-heading" style="font-size:1rem;"></h1></center>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <button class="slds-button slds-button_neutral" onclick="closeApproveOrRejectPopup(); return false;">Cancel</button>
+                            <button class="slds-button slds-button_brand"   id="approveOrRejectLSPRequestButton" onclick="approveOrRejectRequests(); return false;">Yes</button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open" id="backdrop"></div>
+            </div>
+            <!-- Approve/ Reject popup with new functionality Ends Here --> 
+            
+            
+            <!-- Return Popup starts here -->
+            
+            <div class="demo-only" style="height: 640px;display:none;" id="return-custom-popup">
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button onclick="closeReturnPopup(); return false;" class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close">
+                                <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                                    <use href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#close')}"></use>
+                                </svg>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Just a moment!</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            <center><h1 style="font-size:1rem;">At least one change was made on this page. <b>How would you like to proceed?</b></h1></center>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <button class="slds-button slds-button_brand"  onclick="closeReturnPopup();return false;">Back to Dashboard</button>
+                            <!--<apex:commandButton styleClass="slds-button slds-button_neutral" action="{!exitToPrevious}"   value="Exit" />-->
+                            <button class="slds-button slds-button_neutral"  onclick="goToPrevious();">Exit</button> 
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open" id="backdrop"></div>
+            </div>
+            
+            <!-- Retun Popup ends here --> 
+            
+            <div class="demo-only" style="width: 100%;">
+                <div class="slds-form slds-form_compound">
+                    <fieldset class="slds-form-element">
+                        <legend class="slds-form-element__label slds-text-title_caps">
+                            <h1 style="color:#16325C;font-size:1.2rem;font-weight:600;">Filters</h1>
+                        </legend>
+                        <div class="slds-form-element__group">
+                            <div class="slds-form-element__row">
+                                 <div class="slds-form-element slds-size_1-of-3" style="width:30%;"> 
+                                    <label class="slds-form-element__label" style="color:#16325C;font-size:1rem;font-weight:600;">Franchisee Name</label><br/>
+                                    <!--<apex:inputField styleClass="slds-input franchisee-looup-width" value="{!lgFields.Franchisee__c}" id="SpecialFranchisee" style="width:85%"/>-->
+                                    <!--<apex:inputField styleClass="slds-custom-user-lookup" value="{!lgSpecialFields.CreatedBy__c}" id="SpecialFranchisee" style="width:85%"/>-->
+                                    <apex:outputPanel layout="inline">
+                                        <apex:inputHidden value="{!cById}" id="SpecialFranchisee" />
+                                        <apex:inputText styleClass="slds-input" value="{!createdByName }" id="cName" style="width:320px;" onkeyup="franchiseeChange()"/>
+                                        <a href="#" styleClass="slds-input custom-lookup" style="width: 100px!important;padding: 6px!important;border: 1px solid #d8dde6!important;border-radius: .25rem!important;" onclick="openLookupPopup('{!$Component.cName}', '{!$Component.SpecialFranchisee}');return false">
+                                            <apex:image value="{!$Resource.lookupIcon}" styleClass="lookupIcon" style="cursor:pointer;" />
+                                        </a> 
+                                    </apex:outputPanel>
+                                </div> 
+                                <div class="slds-form-element slds-size_1-of-3" style="width:30%;">
+                                    <label class="slds-form-element__label" style="color:#16325C;font-size:1rem;font-weight:600;">Discount Type</label><br/>
+                                    <apex:inputField styleClass="slds-input" value="{!lgSpecialFields.Record_Type__c}" id="SpecialRecordType" onchange="disableSpTOnZeroPrice();return false;" style="width:100%"/>
+                                </div>
+                                <div class="slds-form-element slds-size_1-of-3" style="width:30%;">
+                                    <label class="slds-form-element__label" style="color:#16325C;font-size:1rem;font-weight:600;">Special Price Type</label><br/>
+                                    <apex:inputField styleClass="slds-input" value="{!lgSpecialFields.Discount_Type__c}" id="SpecialDiscountType" onchange="spTypeChange(); return false;" style="width:100%"/>
+                                </div>
+                              <div class="search-class" style="margin: 28px 1px 0px 12px;"> 
+                               
+                                    <apex:commandButton styleClass="slds-button slds-button_brand"   action="{!resetLGSpecialPrice}"  value="Clear" />
+                                    <!--<button class="slds-button slds-button_brand" onclick="clearSearchFilter();">Clear</button>-->
+                                </div>
+                            </div>
+                           <!-- <div class="slds-form-element__row" style="margin-left:36%;margin-right:36%"> -->
+                             <div class="slds-align_absolute-center">
+                                <div class="slds-button-group" role="group">
+                                    <button class="slds-button slds-button_neutral" style="background:#4bca81;color:#ffffff;" onclick="approveLgSpriceRequest();return false;">Approve Request(s)</button>
+                                    <button class="slds-button slds-button_neutral" style="background:#c23934;color:#ffffff;" onclick="rejectLgSpriceRequest();return false;">Reject Request(s)</button>
+                                    <button class="slds-button slds-button_neutral"                                           onclick="openReturnPopup();return false;">Return</button> 
+                                </div>
+                             </div>   
+                          <!--  </div> -->
+                        </div>
+                    </fieldset>
+                </div>
+            </div><br/>
+            <article class="slds-card" id="slds-table-custom" style="width: 100%;">
+                <div class="slds-card__header slds-grid">
+                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                      <!--  <div class="slds-media__figure">
+                            <span class="slds-icon_container slds-icon--small slds-icon-standard-contact" title="description of icon when needed">
+                               <img src="{!URLFOR($Asset.SLDS, 'assets/icons/standard/contact_60.png')}" alt="Reports" />  
+                            </span>
+                        </div> -->
+                        <div class="slds-media__body">
+                            <h2>
+                                <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="LG Special Price">
+                                    <span class="slds-text-heading_small">LG Special Prices</span>
+                                </a>
+                            </h2>
+                        </div>
+                    </header>
+                </div>
+                <div class="slds-card__body" style="overflow:auto;">
+                    <table id="table-custom-lgSp" class="slds-table slds-table_bordered slds-table_resizable-cols slds-table_fixed-layout slds-table_col-bordered" role="grid">
+                        
+                        <thead>
+                            <tr class="">
+                                <td scope="col" class="slds-text-align_right " style="width:3.25rem!important;padding-left: 20px;">
+                                    <div class="slds-th__action slds-th__action_form">
+                                        <span class="slds-checkbox">
+                                            <input type="checkbox" name="options" id="checkbox_all" onchange="checkAll(this)"/>
+                                            <label class="slds-checkbox__label" for="checkbox_all">
+                                                <span class="slds-checkbox_faux"></span>
+                                                <span class="slds-form-element__label slds-assistive-text">Select All</span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </td>
+                                <apex:repeat value="{!fields}" var="f">
+                                    
+                                    <td id="{!f.fieldPath+directionOfSort}" class="slds-is-sortable slds-is-resizable slds-text-title_caps" scope="row">
+                                        <div class="slds-cell-wrap" tabindex="0" id="{!directionOfSort+f.fieldPath}" onclick="sortTable('{!f.fieldPath}',this)">
+                                            <span class="slds-assistive-text">Sort </span>
+                                            <div class="" style="width:80%">
+                                                <apex:outputPanel title="{!f.Label}" rendered="{!IF(f.fieldPath != 'CreatedById',true,false)}" >{!f.Label}</apex:outputPanel>
+                                                <apex:outputPanel title="Created By" rendered="{!IF(f.fieldPath == 'CreatedById',true,false)}" >Created By</apex:outputPanel>
+                                            </div>
+                                            
+                                            <span class="slds-icon_container" style="width:20px;" id="{!f.Label}">
+                                                <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                                                    <use class="arrowDownId" href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#arrowdown')}" style="display:block;"></use>
+                                                    <use class="arrowUpId" href="{!URLFOR($Resource.SLDS, '/assets/icons/utility-sprite/svg/symbols.svg#arrowup')}"   style="display:none;"></use>
+                                                </svg>
+                                            </span>
+                                            <span class="slds-assistive-text" aria-live="assertive" aria-atomic="true"></span>
+                                        </div>
+                                    </td>
+                                </apex:repeat>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat value="{!lstLgSpecialPrice}" var="lgSpecialPrice">
+                                <tr>
+                                    <th role="gridcell" class="slds-text-align_right" style="width:1.25rem;padding-left: 15px;padding-right: 6px!important;" >
+                                        <span class="slds-checkbox">
+                                            <input type="checkbox" name="{!lgSpecialPrice.lgSpecialPrice.Name}" class="custom-checkboxes" id="SpId{!lgSpecialPrice.count}" onChange="reflectChangeToMirrorField(this.checked, 'SpId{!lgSpecialPrice.count}');" data-special-price-type="{!lgSpecialPrice.lgSpecialPrice.Discount_Type__c}"/>
+                                            <label class="slds-checkbox__label" for="SpId{!lgSpecialPrice.count}">
+                                                <span class="slds-checkbox_faux"></span>
+                                                <span class="slds-form-element__label slds-assistive-text">{!lgSpecialPrice.isChecked}</span>
+                                            </label>
+                                        </span>
+                                        <apex:inputCheckbox style="display:none" styleClass="SpId{!lgSpecialPrice.count}" value="{!lgSpecialPrice.isChecked}"/>
+                                    </th>
+                                    <td style="display:none;"><div><apex:outputField value="{!lgSpecialPrice.lgSpecialPrice.Id}"/></div></td>
+                                    <apex:repeat value="{!fields}" var="f">
+                                        <td scope="row" style="padding-left: 0px!important;padding-right: 0px!important;">
+                                            <div class="slds-truncate wrap-content-slds {!f.fieldPath}_div" title="{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}" style="white-space: normal;width:100%">
+                                                <apex:outputLink value="{!URLFOR($Action.LG_Discount__c.View, lgSpecialPrice.lgSpecialPrice.Id)}" rendered="{!IF(f.fieldPath =='Name',true,false)}" onmouseover="showlstDetails('{!lgSpecialPrice.lgSpecialPrice.Month__c}', '{!lgSpecialPrice.lgSpecialPrice.Year__c}', '{!lgSpecialPrice.lgSpecialPrice.Discount_Type__c}', '{!lgSpecialPrice.lgSpecialPrice.Record_Type__c}', '{!lgSpecialPrice.lgSpecialPrice.LG_Student__r.Name}','{!lgSpecialPrice.lgSpecialPrice.Student__r.Name}', this);" onmouseout="hideTooltip();">
+                                                    <span>{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}
+                                                       <div id="tooltipOfLGSpecial" style="display:none;"></div>
+                                                    </span>    
+                                                </apex:outputLink>
+                                                <apex:outputField value="{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}" rendered="{!IF(f.fieldPath !='Approved_Course_Price__c' && f.fieldPath !='Approved_Price_per_Month__c' && f.fieldPath !='Approved_Price_per_Session__c' && f.fieldPath !='Name',true,false)}"/>
+                                                <apex:outputField value="{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}" rendered="{!IF((f.fieldPath =='Approved_Course_Price__c' || f.fieldPath =='Approved_Price_per_Month__c' || f.fieldPath =='Approved_Price_per_Session__c') && lgSpecialPrice.lgSpecialPrice.Discount_Reason__c == 'Zero Monthly Payment' && f.fieldPath !='Name',true,false)}"/>
+                                                <apex:inputField styleClass="apprivedFields {!f.fieldPath}_input approved-{!lgSpecialPrice.lgSpecialPrice.Name+'-'+f.fieldPath}" style="width: 90%" value="{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}" onkeyup="checkChangesMade('SpId{!lgSpecialPrice.count}',this,'{!f.fieldPath}')" rendered="{!IF(((f.fieldPath =='Approved_Course_Price__c' && lgSpecialPrice.lgSpecialPrice.Requested_Course_Price__c != null) || (f.fieldPath =='Approved_Price_per_Month__c' && lgSpecialPrice.lgSpecialPrice.Requested_Price_per_Month__c != null) || (f.fieldPath =='Approved_Price_per_Session__c' && lgSpecialPrice.lgSpecialPrice.Requested_Price_per_Session__c != null)) && lgSpecialPrice.lgSpecialPrice.Discount_Reason__c != 'Zero Monthly Payment' && lgSpecialPrice.lgSpecialPrice.Discount_Reason__c != null,true,false)}"/>
+                                                <apex:outputField value="{!lgSpecialPrice.lgSpecialPrice[f.fieldPath]}"  rendered="{!IF(((f.fieldPath =='Approved_Course_Price__c' && lgSpecialPrice.lgSpecialPrice.Approved_Course_Price__c == null) || (f.fieldPath =='Approved_Price_per_Month__c' && lgSpecialPrice.lgSpecialPrice.Approved_Price_per_Month__c == null) || (f.fieldPath =='Approved_Price_per_Session__c' && lgSpecialPrice.lgSpecialPrice.Approved_Price_per_Session__c == null)) && lgSpecialPrice.lgSpecialPrice.Discount_Reason__c != 'Zero Monthly Payment' && lgSpecialPrice.lgSpecialPrice.Discount_Reason__c != null,true,false)}"/>
+                                            </div>
+                                        </td>
+                                    </apex:repeat>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                </div>
+                <footer class="slds-card__footer"></footer>
+            </article>
+        </apex:form>
+    </body>
+    
+</apex:page>

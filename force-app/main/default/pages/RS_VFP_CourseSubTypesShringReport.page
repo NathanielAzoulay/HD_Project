@@ -1,0 +1,44 @@
+<apex:page controller="RS_VFC_CourseSubTypesShringReport"  standardStylesheets="false" sidebar="false"  readOnly="true" >
+<apex:slds /> 
+ <apex:sectionHeader title="Course Sub Types " subtitle="Sharing Report"/>
+
+<apex:form >
+
+<Br/>
+<center>
+   <apex:commandButton value="Export to Excel" styleClass="btn-default" action="{!exportToExcel}"/>
+   </center>
+<Br/>            
+          
+<table border="0" >
+         <apex:repeat value="{!viewMap}" var="CS">
+  <tr >
+      
+    <td >
+    <apex:outputLink target="_blank" value="/{!CS.Id}" id="theLink"><b>Course Sub Type:</b>{!CS.name}</apex:outputLink>
+    
+    </td>
+   </tr>
+    <th >
+    <div title="User Name">User Name</div>
+  </th>
+  <th >
+    <div title="Account Name">Account Name</div>
+  </th>
+  <th >
+    <div title="Email ">Email</div>
+  </th>
+     <apex:repeat value="{!viewMap[CS]}" var="User">
+       <tr >
+           
+           
+          <td>{!User.Name}</td>
+          <td>{!User.Contact.Account.Name}</td>
+          <td>{!User.Email}</td>
+       </tr> 
+     </apex:repeat>
+  </apex:repeat>
+</table>
+
+</apex:form>   
+</apex:page>

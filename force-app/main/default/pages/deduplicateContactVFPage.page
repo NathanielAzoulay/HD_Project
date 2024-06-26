@@ -1,0 +1,71 @@
+<apex:page standardController="Contact" extensions="DeduplicateContact" lightningStylesheets="true">
+    <style>
+        .customButtonStyle {
+            width: 100px; 
+            margin-right: 20px;
+            margin-bottom: 10px; 
+            justify-content: center;
+        }
+        .linkButtonStyle{
+            font-size : 25px;
+        }
+        .customTextContainer {
+            text-align: center;
+            margin-top: 10vh
+        }
+        .customTextStyle {
+            font-size: 20px; 
+        }
+    </style>
+    <apex:form >      
+    <apex:variable var="showNoContacts" value="{!showNoContacts}" />
+    <apex:variable var="duplicateContacts" value="{!duplicateContacts}" />
+    
+    <div class="customTextContainer">
+        <apex:outputPanel rendered="{!showNoContacts}">
+            No duplicates contacts have been found for this contact 
+        </apex:outputPanel>
+    </div>
+   
+    <div style="max-height: 200px; overflow-y: auto;">
+    <apex:outputPanel rendered="{!NOT(showNoContacts)}">
+        <apex:dataTable value="{!duplicateContacts}" var="contact" id="contactTable" rowClasses="odd,even" cellpadding="5" cellspacing="0" border="1" style="width: 100%;">
+                <apex:column headerValue="Select">
+                    <input id="contact.Id" name="conId" type="radio" value="SEARCH_NAME" onclick="selectContact('{!contact.Id}')"/>
+                </apex:column>
+                <apex:column headerValue="Name" value="{!contact.Name}" />
+                <apex:column headerValue="Email" value="{!contact.Email}" />
+                <apex:column headerValue="Phone" value="{!contact.Phone}" />
+                <apex:column headerValue="Mobile" value="{!contact.MobilePhone}" />
+                <apex:column headerValue="Mailing Country" value="{!contact.Mailing_Address_Country__c}" />
+                <apex:column headerValue="Entity Type" value="{!contact.Entity_Type__c}" />
+                <apex:column headerValue="Record Type" value="{!contact.Contact_Record_Type_Name_R__c}" />
+                <apex:column headerValue="MF Name" value="{!contact.MF_Name__c}" />
+            </apex:dataTable>
+        
+            <apex:actionFunction name="selectContact" rerender="optionalRerender">
+                <apex:param name="contactIdParam" value="" assignTo="{!selectedContactId}"/>
+            </apex:actionFunction>
+
+            <div class="customTextContainer">
+                <div class="customTextStyle">{!$Label.VfDedupliacteContact_LinkContacts}</div>
+                <!-- <apex:commandButton value="{!$Label.VfDeduplicateContact_Yes}" action="{!uniteContact}" rerender="all" oncomplete="if ({!NOT(showMsg)}) { window.top.location='/{!Contact.id}'; }"  styleClass="customButtonStyle"> -->
+                <apex:commandButton value="{!$Label.VfDeduplicateContact_Yes}" action="{!uniteContact}" rerender="status, showmessage, updateStatusMsg" oncomplete="if ({!NOT(showMsg)}) { window.top.location='/{!Contact.id}'; } else { updateStatusMsg('{!JSENCODE(updatedStatusMsg)}'); }" styleClass="customButtonStyle">
+                <!-- <apex:commandButton value="{!$Label.VfDeduplicateContact_Yes}" action="{!uniteContact}" rerender="all" oncomplete="handleCompletion('{!statusMsg}')" styleClass="customButtonStyle">              -->
+                    <apex:param name="selectedButtonValue" value="YES" assignTo="{!selectedButtonValue}" />
+                </apex:commandButton>
+                <apex:commandButton value="{!$Label.VfDeduplicateContact_No}" action="{!uniteContact}" rerender="status, showmessage, updateStatusMsg" oncomplete="if ({!NOT(showMsg)}) { window.top.location='/{!Contact.id}'; } else { updateStatusMsg('{!JSENCODE(updatedStatusMsg)}'); }" styleClass="customButtonStyle">
+                <apex:param name="selectedButtonValue" value="NO" assignTo="{!selectedButtonValue}" />
+                </apex:commandButton> 
+            </div>
+    </apex:outputPanel>
+    <div id="updateStatusMsg"></div>
+    </div>
+    </apex:form>
+    <script>
+    function updateStatusMsg(newStatusMsg) {
+        document.getElementById('updateStatusMsg').innerHTML = newStatusMsg;
+    }
+
+    </script>
+</apex:page>

@@ -1,0 +1,19 @@
+<template>
+    <template if:true={showNoContacts}>
+        No duplicates contacts have been found for this contact 
+    </template>
+    <template if:false={showNoContacts}>
+        <lightning-datatable
+            key-field="Id"
+            data={duplicateContacts}
+            columns={columns}
+            onrowselection={handleRowSelection}
+            selected-rows={selectedRows}
+        ></lightning-datatable>
+        <div>LINK THIS?</div>
+        <lightning-button onclick={unite} label="yes"> YES </lightning-button>
+        <lightning-button onclick={unite} label="no"> NO </lightning-button>
+    </template>
+
+    hellooooooooo
+</template>

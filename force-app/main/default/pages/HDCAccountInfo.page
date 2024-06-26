@@ -1,0 +1,27 @@
+<apex:page controller="AccountInfoPage">
+
+<form action='https://helendoron.info/forecast24/forecast.php' method='post' name='myform' >
+
+<!-- name -->
+
+<input type='hidden' value='{!name}' name='name' />
+
+<!-- Priority number -->
+
+<input type='hidden' value='{!accountBuisness}' name='hdc_mfid' />
+
+<!-- Country -->
+
+<input type='hidden' value='{!country}'  name='country' />
+
+<input type='submit' value='Please wait.... or click to go to the forecast' />
+
+</form>
+
+<script type="text/javascript">
+
+    document.myform.submit();
+
+</script>
+
+</apex:page>

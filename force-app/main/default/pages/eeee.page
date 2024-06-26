@@ -1,0 +1,5 @@
+<apex:page controller="RSMassEditAll.RSMassEdit"  docType="html-5.0" tabStyle="LG_Payment__c" showHeader="false" >
+<apex:form >
+    <apex:input value="{!ttodate}"/>
+</apex:form>
+</apex:page>

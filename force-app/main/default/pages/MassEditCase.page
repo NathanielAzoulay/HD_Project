@@ -1,0 +1,44 @@
+<apex:page standardController="Case" recordSetVar="unused" sidebar="false">
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="Case Number">
+<apex:inputField value="{!a.CaseNumber}"/>
+</apex:column>
+<apex:column headerValue="Description">
+<apex:inputField value="{!a.Description}"/>
+</apex:column>
+<apex:column headerValue="Investigation Results">
+<apex:inputField value="{!a.Investigation_Results__c}"/>
+</apex:column>
+<apex:column headerValue="Root Cause">
+<apex:inputField value="{!a.Root_Cause__c}"/>
+</apex:column>
+<apex:column headerValue="Return form #">
+<apex:inputField value="{!a.Return_form__c}"/>
+</apex:column>
+<apex:column headerValue="Replaced by order #">
+<apex:inputField value="{!a.Replace_by_order__c}"/>
+</apex:column>
+<apex:column headerValue="Parent Case">
+<apex:inputField value="{!case.parentid}"/>
+</apex:column>
+<apex:column headerValue="Status">
+<apex:inputField value="{!case.status}"/>
+</apex:column>
+<apex:column headerValue="Case Reason">
+<apex:inputField value="{!case.Reason}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

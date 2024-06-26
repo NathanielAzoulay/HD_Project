@@ -1,0 +1,202 @@
+<apex:page docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" sidebar="false" showHeader="false" standardController="LG__c" extensions="LGCreateLessons_Ctl" >
+    
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/jquery-1.8.2.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/postmessage/jquery.ba-postmessage.js')}"/>
+
+        <script type="text/javascript">
+            var j$ = jQuery.noConflict();
+    
+            var parent_domain = '{!$CurrentPage.parameters.parent_domain}';
+    
+            j$(document).ready(function() {
+                j$("div#form_2").hide();
+                
+                j$('input[id$=btnCloseModalDialog]').click(function(event) {
+                    event.preventDefault();
+                    closeModalDialog();
+                });
+            });
+            
+            function closeModalDialog() {
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog';
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                ); 
+            }
+            
+            function closeModalDialogAndRedirect() {
+                var redirectUrl = j$('input[id$=redirectUrl]').val();
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog_redirect';
+                cross_result.redirect_url = redirectUrl;
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                );
+            }
+            
+            function continueBtn(){
+                var selOption = j$("input[name='optionsRadios']:checked").val();
+                
+                if( selOption == 'endDate' ){
+                    doCreateForEndDateJS();
+                }else{
+                    if( j$("div#form_1").is(":visible") ){
+                        j$("div#form_1").hide();
+                        j$("div#form_2").show();
+                        
+                        j$("button#btnSubmit").text("Create");
+                    }else{
+                        doCreateForNumOfLessonsJS();
+                    }
+                }
+            }
+        </script>
+        <style>
+            .bootstrap-sf1 input[type=date], .bootstrap-sf1 input[type=datetime-local], .bootstrap-sf1 input[type=month], .bootstrap-sf1 input[type=time] {
+                line-height: inherit !important;
+            }
+            
+            .needInformationTitle.h2{
+                margin-top: 0px !important;
+            }
+            
+            #form_2 .row{
+                line-height: 25px;
+            }
+        </style>
+    </head>
+    
+    <link href="{!URLFOR($Resource.Bootstrap4SW, 'css/bootstrap-namespaced.min.css')}" rel="stylesheet"/> 
+    
+    <div class="bootstrap-sf1" style="background: transparent!important;">    
+        
+        <apex:outputPanel id="FailurePanel" layout="none" rendered="{!NOT(ISBLANK(showError))}">        
+            <br/>
+            <div class="col-md-4 text-center"> 
+                <div class="alert alert-error" role="alert">
+                    <p>
+                       <span style="color:red;">{!showError}</span>
+                       <br/>
+                       <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button> 
+                    </p>
+                    
+                </div>
+                
+            </div>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="SuccessPanel" layout="none" rendered="{!showDone}">        
+            <br/>
+            <div class="col-md-4 text-center"> 
+                <div class="alert alert-info" role="alert"><p>The action was submitted, refresh your layout to see LG Lessons</p></div>
+                <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+            </div>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="needInformationPanel" layout="none" rendered="{!showTypeOfCreationLGLessons}" >
+            <apex:form >
+                <apex:actionFunction action="{!doCreateForEndDate}" name="doCreateForEndDateJS"  />
+                <apex:actionFunction action="{!doCreateForNumOfLessons}" name="doCreateForNumOfLessonsJS"  />
+                
+                <div class="col-md-4 text-left">  
+                    <div class="alert alert-warning" role="alert">
+                        <div id="form_1" >
+                            <div class="needInformationTitle h2" >
+                                <ins>Create Lessons</ins>
+                            </div>
+                            
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios" id="rbLGEndDate" value="endDate" checked="true" />
+                                    Create Lessons by LG End Date
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="optionsRadios" id="rbNumberOfLessons" value="numOfLessons" />
+                                    Create Lessons by Number of Lessons
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="form_2" style="display:none;" >
+                            <div class="needInformationTitle h2" >
+                                <ins>Create Lessons by Number of Lessons</ins>
+                            </div>
+                            
+                            <div>
+                                <div class="row" >
+                                    <div class="col-xs-6" >
+                                        Recommended Lessons
+                                    </div>
+                                    <div class="col-xs-3 text-right" >
+                                        <apex:outputField value="{! currentLG.Recommended_Lessons__c }" />
+                                    </div>
+                                </div>
+                                <div class="row" >
+                                    <div class="col-xs-6" >
+                                        LG Lessons
+                                    </div>
+                                    <div class="col-xs-3 text-right" >
+                                        <apex:inputField styleClass="text-right" style="width: 50px;" value="{! currentLG.LG_Lessons__c }" />
+                                    </div>
+                                </div>
+                                <div class="row" style="display:{!IF(ISBLANK(currentLG.Price_per_Month__c),'none;','')}" >
+                                    <div class="col-xs-6" >
+                                        End Paying Date
+                                    </div>
+                                    <div class="col-xs-3 text-right" >
+                                        <apex:outputField value="{! currentLG.LG_End_Paying_Date__c }" />
+                                    </div>
+                                </div>
+                                <div class="row" style="display:{!IF(ISBLANK(currentLG.Price_per_Month__c),'none;','')}">
+                                    <div class="col-xs-6" >
+                                        Update End Paying Date
+                                    </div>
+                                    <div class="col-xs-3 text-right" >
+                                        <apex:selectList multiselect="false" size="1" value="{! updateEndPayingDate }" >
+                                            <apex:selectOption itemValue="true" itemLabel="YES" />
+                                            <apex:selectOption itemValue="false" itemLabel="NO" />
+                                        </apex:selectList>
+                                    </div>
+                                </div>
+                                <p style="font-size: 10px; display:{!IF(ISBLANK(currentLG.Price_per_Month__c),'none;','')}">
+                                    According to the last lesson date
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right" >
+                        <button id="btnSubmit" type="button" class="btn btn-default" onClick="continueBtn();"  >Continue</button>
+                        <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                    </div>
+                </div>
+            </apex:form>
+        </apex:outputPanel>
+        
+        
+        <apex:outputPanel id="needInformationPanel2" layout="none" rendered="{!showForm}">
+            <apex:form >            
+                <div class="col-md-4 text-center">  
+                    <div class="alert alert-warning" role="alert">
+                    <p>Please Enter Starting Date: <apex:input required="true" type="date" value="{!selectedDate}"/></p> 
+                    </div>
+                    <apex:commandButton styleClass="btn btn-default" value="Create Lessons" action="{!doCreate}" id="btnSubmit" />
+                    <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                </div>
+            </apex:form>
+        </apex:outputPanel>
+       
+    </div>
+</apex:page>

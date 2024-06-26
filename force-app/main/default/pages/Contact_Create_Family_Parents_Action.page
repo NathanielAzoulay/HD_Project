@@ -1,0 +1,18 @@
+<!--/* Name                        :
+Description                    :
+Related components             :Flow: Create_Family_Record_from_Contact + Button On Contact:    New_Family
+File Version                   :
+ 
+Created/Modified by   Created/Modified Date     Requested by          Related Task/Issue 
+        Gal           10.01.16                    Ella           SW-17248 - HD - Family & Parents Flow Process 
+----------------------------------------------------------------------------------------*/ -->
+
+<apex:page StandardController="Contact" extensions="Family_Parents_Action_Controller">
+	<script language="JavaScript">
+        close();
+    </script>
+
+    <flow:interview name="Family_Parents_Action" finishLocation="{!CloseWindow}"><!--{!URLFOR($Action.Contact.View, Contact.id)}-->
+        <apex:param name="ContactID" value="{!Contact.Id}"/>
+    </flow:interview>
+</apex:page>

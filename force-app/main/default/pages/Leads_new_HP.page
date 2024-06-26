@@ -1,0 +1,8 @@
+<apex:page >
+  <apex:sectionHeader title="Leads"/>
+  <apex:enhancedList type="Lead" height="600" rowsPerPage="50"/>
+  <br/>
+  <apex:outputLink value="/00Q/o">
+    See Recent Items / Extra Options
+  </apex:outputLink>
+</apex:page>

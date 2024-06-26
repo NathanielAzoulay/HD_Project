@@ -1,0 +1,389 @@
+<apex:page controller="UserLoginReportController"  standardStylesheets="false" sidebar="false" docType="html-5.0" applyBodyTag="False">
+    <head>
+        <title>User Login Report</title>
+        <apex:slds /> 
+    </head>
+    <body class="slds-scope">
+       
+        <!-- PAGE HEADER -->
+        <div class="slds-page-header" role="banner">
+          <div class="slds-grid">
+            <div class="slds-col slds-has-flexi-truncate">
+              <!-- HEADING AREA -->
+                <h1 class="slds-page-header__title slds-truncate" title="Reports">
+                <span class="slds-icon_container slds-icon--small slds-icon-standard-account" title="Reports">
+                    <img src="{!URLFOR($Asset.SLDS, 'assets/icons/standard/account_60.png')}" alt="Reports" />
+                </span>
+                User Login Reports
+                </h1>
+                
+              <!-- / HEADING AREA -->
+            </div>
+          </div>
+        </div>
+        <!-- / PAGE HEADER -->
+        <br/><br/>
+        
+        <div class="slds-form slds-form_compound">
+            <fieldset class="slds-form-element">
+              <div class="slds-form-element__group">
+                <div class="slds-form-element__row">
+                  <div class="slds-form-element slds-size_1-of-2">
+                  <table class="slds-table slds-table_bordered slds-table_cell-buffer" 
+                      style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Contact Record Type">Contact Record Type</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Profile: Name">Profile: Name</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Last Login Users">Count Of Last Login Users</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstModalAV}" var="user">
+                            <tr>
+                              <th scope="row" data-label="{!user.contactRecordType}">
+                                <div class="slds-truncate" title="{!user.contactRecordType}">
+                                    <apex:outputText value="{!user.contactRecordType}"/>
+                                </div>
+                              </th>
+                              <td data-label="">
+                                <div class="slds-truncate" title="">
+                                </div>
+                              </td>
+                              <td data-label="{!user.countOfLastLoginRecords}">
+                                <div class="slds-truncate" title="{!user.countOfLastLoginRecords}">{!user.countOfLastLoginRecords}</div>
+                              </td>
+                            </tr>
+                            <apex:repeat value="{!user.lstProfileModal}" var="pm">
+                            <tr>
+                              <td data-label="">
+                                <div class="slds-truncate" title=""></div>
+                              </td>
+                              <td data-label="{!pm.profileName}">
+                                <div class="slds-truncate" title="{!pm.profileName}">
+                                 <apex:outputText value="{!pm.profileName}"/>
+                                </div>
+                              </td>
+                              <td data-label="{!pm.countOfLastLoginUsers}">
+                                <div class="slds-truncate" title="{!pm.countOfLastLoginUsers}">{!pm.countOfLastLoginUsers}</div>
+                              </td>
+                              </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="slds-form-element slds-size_1-of-2">
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer"
+                        style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Contact Record Type">Contact Record Type</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Profile: Name">Profile: Name</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Active Users">Count Of Active Users</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Percentage">Percentage</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstModalAV}" var="user">
+                            <tr>
+                              <th scope="row" data-label="{!user.contactRecordType}">
+                                <div class="slds-truncate" title="{!user.contactRecordType}">
+                                 <apex:outputText value="{!user.contactRecordType}"/>
+                                </div>
+                              </th>
+                              <td data-label="">
+                                <div class="slds-truncate" title="">
+                                </div>
+                              </td>
+                              <td data-label="{!user.countOfActiveRecords}">
+                                <div class="slds-truncate" title="{!user.countOfActiveRecords}">{!user.countOfActiveRecords}</div>
+                              </td>
+                              <td data-label="Percentage">
+                                <div class="slds-truncate" title="Percentage">
+                                    <apex:outputText value="{0, number, ##0.0}%">
+                                        <apex:param value="{!(user.countOfLastLoginRecords / user.countOfActiveRecords )*100}"/>
+                                    </apex:outputText>
+                                </div>
+                              </td>
+                            </tr>
+                            <apex:repeat value="{!user.lstProfileModal}" var="pm">
+                            <tr>
+                              <td data-label="">
+                                <div class="slds-truncate" title=""></div>
+                              </td>
+                              <td data-label="{!pm.profileName}">
+                                <div class="slds-truncate" title="{!pm.profileName}">
+                                 <apex:outputText value="{!pm.profileName}"/>
+                                </div>
+                              </td>
+                              <td data-label="{!pm.countOfActiveUsers}">
+                                <div class="slds-truncate" title="{!pm.countOfActiveUsers}">{!pm.countOfActiveUsers}</div>
+                              </td>
+                              <td data-label="Percentage">
+                                <div class="slds-truncate" title="Percentage">
+                                    <apex:outputText value="{0, number, ##0.0}%">
+                                        <apex:param value="{!(pm.countOfLastLoginUsers / pm.countOfActiveUsers)*100}"/>
+                                    </apex:outputText>
+                                </div>
+                              </td>
+                              </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+        </div>
+        
+        <br/><br/>
+        <div class="slds-form slds-form_compound">
+            <fieldset class="slds-form-element">
+              <div class="slds-form-element__group">
+                <div class="slds-form-element__row">
+                  <div class="slds-form-element slds-size_1-of-2">
+                  <table class="slds-table slds-table_bordered slds-table_cell-buffer" 
+                      style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Mailing Country">Contact: Mailing Country</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Last Login User">Count Of Last Login Users</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstUserGroupByMCountry}" var="userByMCountry">
+                            <tr>
+                              <th scope="row" data-label="{!userByMCountry.countryName}">
+                                <div class="slds-truncate" title="{!userByMCountry.countryName}">
+                                    <apex:outputText value="{!userByMCountry.countryName}"/>
+                                </div>
+                              </th>
+                              <td data-label="{!userByMCountry.lastLoginCount}">
+                                <div class="slds-truncate" title="{!userByMCountry.lastLoginCount}">
+                                    {!userByMCountry.lastLoginCount}
+                                </div>
+                              </td>
+                            </tr>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="slds-form-element slds-size_1-of-2">
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer"
+                        style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Contact: Mailing Country">Contact: Mailing Country</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Active User">Count Of Active Users</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Difference">Difference(Active User, Last Login User)</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Percentage">Percentage</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstUserGroupByMCountry}" var="userByMCountry">
+                            <tr>
+                              <th scope="row" data-label="{!userByMCountry.countryName}">
+                                <div class="slds-truncate" title="{!userByMCountry.countryName}">
+                                 <apex:outputText value="{!userByMCountry.countryName}"/>
+                                </div>
+                              </th>
+                              <td data-label="{!userByMCountry.activeUsersCount}">
+                                <div class="slds-truncate" title="{!userByMCountry.activeUsersCount}">
+                                    {!userByMCountry.activeUsersCount}
+                                </div>
+                              </td>
+                              <td data-label="Difference">
+                                <div class="slds-truncate" title="{!(userByMCountry.activeUsersCount - userByMCountry.lastLoginCount)}">
+                                    {!(userByMCountry.activeUsersCount- userByMCountry.lastLoginCount)}
+                                </div>
+                              </td>
+                              <td data-label="Percentage">
+                                <div class="slds-truncate" title="Percentage">
+                                    <apex:outputText value="{0, number, ##0.0}%">
+                                        <apex:param value="{!(userByMCountry.lastLoginCount / userByMCountry.activeUsersCount )*100}"/>
+                                    </apex:outputText>
+                                </div>
+                              </td>
+                            </tr>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+        </div>
+        
+        
+        <br/><br/>
+        <div class="slds-form slds-form_compound">
+            <fieldset class="slds-form-element">
+              <div class="slds-form-element__group">
+                <div class="slds-form-element__row">
+                  <div class="slds-form-element slds-size_1-of-2">
+                  <table class="slds-table slds-table_bordered slds-table_cell-buffer" 
+                      style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Contact: Mailing Country">Contact: Mailing Country</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Profile: Name">Profile: Name</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Last Login Users">Count Of Last Login Users</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstUsersByCandPName}" var="user">
+                            <tr>
+                              <th scope="row" data-label="{!user.mailingCountryName}">
+                                <div class="slds-truncate" title="{!user.mailingCountryName}">
+                                    <apex:outputText value="{!user.mailingCountryName}"/>
+                                </div>
+                              </th>
+                              <td data-label="">
+                                <div class="slds-truncate" title="">
+                                </div>
+                              </td>
+                              <td data-label="{!user.lastLoginUsersRecords}">
+                                <div class="slds-truncate" title="{!user.lastLoginUsersRecords}">{!user.lastLoginUsersRecords}</div>
+                              </td>
+                            </tr>
+                            <apex:repeat value="{!user.proModalList}" var="pm">
+                            <tr>
+                              <td data-label="">
+                                <div class="slds-truncate" title=""></div>
+                              </td>
+                              <td data-label="{!pm.profileName}">
+                                <div class="slds-truncate" title="{!pm.profileName}">
+                                 <apex:outputText value="{!pm.profileName}"/>
+                                </div>
+                              </td>
+                              <td data-label="{!pm.countOfLastLoginUsers}">
+                                <div class="slds-truncate" title="{!pm.countOfLastLoginUsers}">{!pm.countOfLastLoginUsers}</div>
+                              </td>
+                              </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="slds-form-element slds-size_1-of-2">
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer"
+                        style="border-left: 1px solid #d8dde6;border-right: 1px solid #d8dde6;">
+                      <thead>
+                        <tr class="slds-text-title_caps">
+                          <th scope="col">
+                            <div class="slds-truncate" title="Contact Record Type">Contact Record Type</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Profile: Name">Profile: Name</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Count Of Active Users">Count Of Active Users</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Difference">Difference</div>
+                          </th>
+                          <th scope="col">
+                            <div class="slds-truncate" title="Percentage">Percentage</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          <apex:repeat value="{!lstUsersByCandPName}" var="user">
+                            <tr>
+                              <th scope="row" data-label="{!user.mailingCountryName}">
+                                <div class="slds-truncate" title="{!user.mailingCountryName}">
+                                 <apex:outputText value="{!user.mailingCountryName}"/>
+                                </div>
+                              </th>
+                              <td data-label="">
+                                <div class="slds-truncate" title="">
+                                </div>
+                              </td>
+                              <td data-label="{!user.activeUsersRecords}">
+                                <div class="slds-truncate" title="{!user.activeUsersRecords}">{!user.activeUsersRecords}</div>
+                              </td>
+                              <td data-label="Difference">
+                                <div class="slds-truncate" title="{!(user.activeUsersRecords - user.lastLoginUsersRecords )}">
+                                   {!(user.activeUsersRecords - user.lastLoginUsersRecords)}
+                                </div>
+                              </td>
+                              <td data-label="Percentage">
+                                <div class="slds-truncate" title="Percentage">
+                                <apex:outputText value="{0, number, ##0.0}%">
+                                    <apex:param value="{!(user.lastLoginUsersRecords / user.activeUsersRecords )*100}"/>
+                                </apex:outputText>
+                                </div>
+                              </td>
+                            </tr>
+                            <apex:repeat value="{!user.proModalList}" var="pm">
+                            <tr>
+                              <td data-label="">
+                                <div class="slds-truncate" title=""></div>
+                              </td>
+                              <td data-label="{!pm.profileName}">
+                                <div class="slds-truncate" title="{!pm.profileName}">
+                                 <apex:outputText value="{!pm.profileName}"/>
+                                </div>
+                              </td>
+                              <td data-label="{!pm.countOfActiveUsers}">
+                                <div class="slds-truncate" title="{!pm.countOfActiveUsers}">{!pm.countOfActiveUsers}</div>
+                              </td>
+                              <td data-label="Difference">
+                                <div class="slds-truncate" title="{!(pm.countOfActiveUsers - pm.countOfLastLoginUsers)}">{!(pm.countOfActiveUsers - pm.countOfLastLoginUsers)}</div>
+                              </td>
+                              <td data-label="Percentage">
+                                <div class="slds-truncate" title="Percentage">
+                                <apex:outputText value="{0, number, ##0.0}%">
+                                    <apex:param value="{!(pm.countOfLastLoginUsers / pm.countOfActiveUsers)*100}"/>
+                                </apex:outputText>
+                                </div>
+                              </td>
+                              </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+        </div>
+    </body>
+</apex:page>

@@ -1,0 +1,15 @@
+<apex:page standardController="Case" >
+<!--
+ <script>
+        var CaseStatus = '{!Case.Status}' 
+        var id = '{!Case.id}';
+        if (CaseStatus =='Closed')
+         {
+            alert('Can not edit closed case' );
+            window.location.href = '/'+id;
+         }
+        else
+            window.location.href = 'https://eu1.salesforce.com/'+id+'/e?retURL='+id;
+</script>
+!-->
+</apex:page>

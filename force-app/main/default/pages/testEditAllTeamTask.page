@@ -1,0 +1,207 @@
+<apex:page controller="RSMassEditAll.RSMassEdit" docType="html-5.0" showHeader="false" >
+<style>
+        
+        .dis{
+        opacity: 0.65; 
+        cursor: not-allowed;
+        }
+        #loading-image {
+        position: fixed;
+        top: 40%;
+        left: 47%;
+        width:4%;
+        } 
+        #loading {
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 1) !important;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        position: fixed;
+        display: block;
+        text-align: center;
+        z-index: 9005;
+        }   
+    </style>
+<apex:form id="form">
+        
+        <vs:importvisualstrap />
+        
+        <vs:visualstrapblock >
+                <apex:pageMessages />
+                
+                <vs:modal title="select field for mass update " id="myModal"  >
+                    
+                    <apex:pageMessages />
+                    <apex:dataTable value="{!rsobj}" var="acc" styleClass="table" >
+                        <apex:column headerValue="Field Name">
+                            <apex:outputPanel layout="block" >
+                                <apex:actionRegion >
+                                    <apex:selectList value="{!selectedField}" size="1" required="true" tabindex="70">
+                                        <apex:selectOptions value="{!ObjectFields}" /> 
+                                        <apex:actionSupport event="onchange" reRender="SubStatusRerender" />        
+                                    </apex:selectList>
+                                </apex:actionRegion>
+                            </apex:outputPanel>             
+                        </apex:column>
+                        <apex:column headerValue="Field Value"  >
+                            <apex:outputPanel layout="block" id="SubStatusRerender"  >               
+                                <apex:inputField value="{!acc[selectedField]}" />   
+                            </apex:outputPanel> 
+                        </apex:column>
+                    </apex:dataTable>    
+                    <apex:outputPanel layout="block" styleClass="modal-footer"  >
+                        <apex:commandButton value="Cancel" styleClass="btn-warning" html-data-dismiss="modal"/>
+                        <apex:commandButton value="Apply All Changes " styleClass="btn-success"  action="{!saveall}" >
+                        </apex:commandButton>
+                    </apex:outputPanel>
+                </vs:modal>
+                
+           
+                
+                
+                <apex:pageBlock mode="maindetail">
+                    <apex:pageBlockSection title="Date Filters"  >
+                        <apex:outputPanel layout="block" >
+                            
+                            <apex:dataTable value="{!Datefields.size}" var="f" rendered="{!Datefields.size>0}" styleClass="table table-hover">
+                                <apex:column headerValue="Date Field">   
+                                    <apex:selectList value="{!fdate}" size="1"  > 
+                                        <apex:selectOptions value="{!Datefields}">                     
+                                        </apex:selectOptions>               
+                                    </apex:selectList> 
+                                </apex:column>
+                                <apex:column headerValue="from">
+                                    <apex:input value="{!ffromdate}" title="from Date" type="date" />
+                                </apex:column>
+                                <apex:column headerValue="to">    
+                                    <apex:input value="{!ttodate}" title="To Date" type="date" >
+                                    </apex:input>    
+                                </apex:column>   
+                            </apex:dataTable> 
+                        </apex:outputPanel> 
+                    </apex:pageBlockSection>   
+                    
+                    <apex:pageBlockSection title="Other Filters"  >                              
+                        <apex:dataTable value="{!robj}" var="f" styleClass="table table-hover" >
+                            <apex:repeat value="{!$ObjectType.Team_Task__c.FieldSets.FilterMassEdit}" var="field">
+                                <apex:column headerValue="{!field.label}" rendered="{!if ((field.Type='date') || (field.Type='datetime'),false,true)}" >
+                                    <apex:inputField value="{!f[field]}" required="false" >
+                                    </apex:inputField>    
+                                </apex:column>  
+                            </apex:repeat>
+                        </apex:dataTable>
+                    </apex:pageBlockSection>   
+                </apex:pageBlock>  
+                <CENTER>
+                    <vs:buttongroup >
+                        
+                        <apex:commandButton value="search"  action="{!queryFilter}"  status="counterStatus" id="button" rerender="form"  styleClass="btn-default">
+                            
+                            <apex:actionStatus id="counterStatus"  startText="loading ...... " > 
+                                <apex:facet name="start" >
+                                    <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                                        <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />    
+                                    </div> 
+                                </apex:facet>
+                                
+                            </apex:actionStatus>
+                        </apex:commandButton>
+                        
+                    </vs:buttongroup>
+                </CENTER>
+                <br/>
+                <br/>
+                
+                
+                
+                
+                <CENTER>
+                    
+                    <apex:outputPanel layout="block" >
+                        <apex:commandButton value="Mass Update " onclick="return false;" html-data-toggle="modal" html-data-target="#myModal" styleClass="btn-danger brn-lg"/>                                
+                        <apex:commandButton value="save"  action="{!save}"  status="counterStatus" id="button" rerender="form" styleClass="btn-success" >
+                            <apex:actionStatus id="counterStatus"  startText="loading ...... " > 
+                                <apex:facet name="start" >
+                                    <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                                        <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />    
+                                    </div> 
+                                </apex:facet>
+                                
+                            </apex:actionStatus>
+                        </apex:commandButton>
+                        <apex:commandButton value="Return"  action="{!rReturn}" styleClass="btn-default" >
+                        </apex:commandButton>
+                        <apex:commandButton value="<<" action="{!beginning}" rendered="{!NOT (DisablePrevious)}"  styleClass="btn-default" />
+                        <apex:commandButton value="<" action="{!previous}" rendered="{! Not (DisablePrevious)}" styleClass="btn-default"/>
+                        <apex:commandButton value=">" action="{!next}" rendered="{!NOT(DisableNext)}" styleClass="btn-default"  >
+                        </apex:commandButton>
+                        <apex:commandButton value=">>" action="{!last}" rendered="{!NOT(DisableNext)}" styleClass="btn-default" />
+                        
+                    </apex:outputPanel>
+                </CENTER> 
+                <br/>
+                <apex:outputPanel rendered="{!DisableNext = false}"  styleClass="label label-info" >
+                    {!counter+1}-{!counter+limitSize} of {!rSobjectList.size} Records
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!DisableNext}"  styleClass="label label-info" >
+                    {!counter+1}-{!rSobjectList.size} of {!rSobjectList.size} Records
+                </apex:outputPanel>
+                  </vs:visualstrapblock>
+       
+      
+<head>
+        <apex:includescript value="//code.jquery.com/jquery-1.11.1.min.js" / >
+        <apex:includescript value="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js" />
+        <apex:stylesheet value="//cdn.datatables.net/1.10.4/css/jquery.dataTables.css" />
+        <script>
+            j$ = jQuery.noConflict();
+            j$(document).ready( function () {
+                var contactTable = j$('[id$="contacttable"]').DataTable({
+                 aLengthMenu: [
+                     [50,-1],
+                     [50, "All"]
+                   ],
+                   "iDisplayLength": 50,   
+                });
+            });
+        </script>
+    </head>
+
+   <body>
+   <div style="overflow:auto;"> 
+        <apex:dataTable value="{!rSobjectListToShow}" var="a" styleClass="table table-condensed" id="contacttable" > 
+                        <apex:column headerValue="Subject">
+                         <apex:outputLink value="/{!a['Id']}" >{!a['Name']}</apex:outputLink>
+                       </apex:column>
+                       <apex:column headerValue="IT-Status">
+                        <apex:outputField value="{!a['IT_Status__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Status">
+                        <apex:inputField value="{!a['Ststus__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Priority">
+                        <apex:outputField value="{!a['Priority__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Progress">
+                        <apex:outputField value="{!a['Progress__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Due Date">
+                        <apex:outputField value="{!a['Due_Date__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Description">
+                        <apex:inputField value="{!a['Description__c']}"/>
+                       </apex:column>
+                       <apex:column headerValue="Comments">
+                        <apex:inputField value="{!a['Comments__c']}"/>
+                       </apex:column>
+                        <apex:column headerValue="Owner">
+                        <apex:outputField value="{!a['OwnerId']}"/>
+                       </apex:column>
+                    </apex:dataTable>IT-Status
+    </div>                
+    </body>
+    </apex:form>   
+</apex:page>

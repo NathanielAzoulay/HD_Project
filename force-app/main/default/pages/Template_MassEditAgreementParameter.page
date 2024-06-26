@@ -1,0 +1,34 @@
+<apex:page standardController="Agreement_Parameter__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="Agreement Parameter Code">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="From Franchisee">
+<apex:inputField value="{!a.From_Franchisee__c}"/>
+</apex:column>
+<apex:column headerValue="Royalty Percent">
+<apex:inputField value="{!a.Royalty_Percent__c}"/>
+</apex:column>
+<apex:column headerValue="Student Count/Revenue">
+<apex:inputField value="{!a.Student_Count_Revenue__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

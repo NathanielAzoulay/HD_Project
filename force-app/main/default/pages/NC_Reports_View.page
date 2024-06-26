@@ -1,0 +1,7 @@
+<apex:page >
+  <apex:sectionHeader title="Leads"/>
+    <br/>
+  <apex:outputLink value="/a0q/l">
+    See Recent Items / Extra Options
+  </apex:outputLink>
+</apex:page>

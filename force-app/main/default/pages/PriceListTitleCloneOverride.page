@@ -1,0 +1,2 @@
+<apex:page standardController="Price_List_Title__c" extensions="PriceListTitleCloneOverrideCtrl" action="{!doRedirect}">
+</apex:page>

@@ -1,0 +1,118 @@
+<apex:page >
+    <div id="container_content" class="search-layout container">
+        <apex:sectionHeader title="Content" subtitle="Search for Content" help="https://help.salesforce.com/articleView?id=content_search.htm&siteLang=en_US&type=0"/>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <label style="font-weight:bold;font-size: 12px;">Search in</label>
+        <select ng-model="selectedLib" ng-change="" style="font: 11px BlinkMacSystemFont;">
+            <option ng-repeat="lib in libraries" ng-disabled="lib.isSelected" value="{{lib.name}}">{{parseResult(lib.label)}}</option>
+        </select>
+        <label style="font-weight:bold;font-size: 12px;">for</label>
+        <input type="text" ng-model="inputText" style="width: 240px;" maxlength="100"/>
+        <div style="display:inline;" ng-show="languages.length > 1">
+            <label style="font-weight:bold;font-size: 12px;">in</label>
+            <select ng-model="selectedLang" ng-change="" style="font: 11px BlinkMacSystemFont;">
+                <option ng-repeat="lang in languages" value="{{lang.name}}">{{parseResult(lang.label)}}</option>
+            </select>
+        </div>
+        <input type="button" value="Go!" style="padding:2px 3px 2px 3px;font-size: 11px;" class="btn" ng-click="goSearch();"/>
+        <a style="text-decoration:underline;font-size: 12px;" ng-click="clearAll()">Clear Search</a>
+    </div>
+    <div class="bPageBlock brandSecondaryBrd">
+        <div class="searchResultHeader">
+            <img src="{!URLFOR($Resource.Icons, 'glass.png')}" alt="" class="searchResultsIcon" title="" width="30px"/>
+            <div style="font-weight:bold;font-size:15px;display: inline;margin-left:5px">Search Result:</div>
+            <div style="font-size:12px;display: inline;">Showing {{((currentPage*displayOptions.resultPerPage)+1-displayOptions.resultPerPage)}} - {{((currentPage*displayOptions.resultPerPage) > (allFilteredContents.length) ? allFilteredContents.length : (currentPage*displayOptions.resultPerPage))}} of {{allFilteredContents.length | number}} results
+            </div>
+        </div>
+        <div ng-show="appiledFilters.length > 0" class="appliedFilterBlock">
+            <div style="font-weight:bold;">
+            <img style="height:15px;" src="{!URLFOR($Resource.Icons,'filter_icon_small.gif')}"  />
+            Filters applied:
+            <button ng-repeat="filterobj in appiledFilters" style="padding:0px 3px 0px 3px;">{{parseResult(filterobj.label)}}
+                <img src="{!URLFOR($Resource.Icons,'close_breadcrumb.png')}" style="margin-left: 2px;padding-left: 2px;padding-bottom: 1px;" ng-click="filterContents(filterobj.filter,filterobj.name,filterobj.label,false)"/>
+            </button>
+            <a style="font-weight:bold;text-decoration:underline;" ng-click="clear()">Clear</a>
+            </div>
+        </div>
+        <hr style="border-top: 1px solid white;margin:5px;"/>
+        <div style="margin:5px;">
+            <div style="display:inline;"><input type="button" style="margin-left: 15px;padding:2px 3px 2px 3px;font-size: 11px;" value="Download" class="btn" ng-click="download();"/></div >
+            <div class="paging" ng-show="currentPage<=totalPage && totalPage >1">
+                <a class="page" ng-show="currentPage>1" title="Go to the first page of results" ng-click="currentPage=0;next();">«</a>
+                <a class="page" ng-show="currentPage>1" title="Go to the previous page of results" ng-click="previous();">&lt; Previous</a>
+                <a class="page" ng-show="currentPage-4>0 && (currentPage < 3 || currentPage == totalPage)" ng-click="currentPage=currentPage-3;previous();">{{currentPage-4}}</a>
+                <a class="page" ng-show="currentPage-3>0 && (currentPage < 3 || currentPage == totalPage || currentPage == totalPage-1)" ng-click="currentPage=currentPage-2;previous();">{{currentPage-3}}</a>
+                <a class="page" ng-show="currentPage-2>0" ng-click="currentPage=currentPage-1;previous();">{{currentPage-2}}</a>
+                <a class="page" ng-show="currentPage-1>0 " ng-click="previous();">{{currentPage-1}}</a>
+                <a class="page" style="text-decoration: none !important;">{{currentPage}}</a>
+                <a class="page" ng-show="currentPage+1<=totalPage" ng-click="next();">{{currentPage+1}}</a>
+                <a class="page" ng-show="currentPage+2<=totalPage" ng-click="currentPage=currentPage+1;next();">{{currentPage+2}}</a>
+                <a class="page" ng-show="currentPage+3<=totalPage && (currentPage>totalPage-3 || currentPage==1 || currentPage==2)" ng-click="currentPage=currentPage+2;next();">{{currentPage+3}}</a>
+                <a class="page" ng-show="currentPage+4<=totalPage && (currentPage>totalPage-3 || currentPage==1)" ng-click="currentPage=currentPage+3;next();">{{currentPage+4}}</a>
+                <a class="page" ng-show="currentPage<totalPage" title="Go to the next page of results" ng-click="next();">Next &gt;</a>
+                <a class="page" ng-show="currentPage<totalPage" title="Go to the last page of results" ng-click="currentPage=totalPage-1;next();">»</a>
+            </div>
+            <div style="float:right;position:relative;">
+                <input type="button" value="Display Options" style="padding:2px 3px 2px 3px;font-size: 11px;" class="btn" ng-click="showDisplayOptions = true"/>
+            </div >
+        </div>
+        <table class="list" border="0" cellpadding="0" cellspacing="0">
+            <tr class="headerRow">
+                <th class="header" style="border: 1px solid #e0e3e5;width: 25px;">
+                    <input type="checkbox" id="selectAll" ng-model="allSelected" ng-click="selectAll();"/>
+                </th>
+                <th class="header" style="border: 1px solid #e0e3e5;" ng-repeat="field in headerValues">
+                    <span ng-click="orderBy(field);">
+                        {{parseResult(field)}}
+                        <img style="height:12px;" src="{!URLFOR($Resource.Icons,'sort_asc_arrow.gif')}"  ng-show="selectedHeader == field && !reverse"/>
+                        <img style="height:12px;" src="{!URLFOR($Resource.Icons,'sort_desc_arrow.gif')}"  ng-show="selectedHeader == field && reverse"/>
+                    </span>
+                </th>
+            </tr>
+            <tbody ng-repeat="content in allFilteredContents">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <input type="checkbox" class="singleSelect" id="singleSelect" onclick="toggleItem();"
+                                                    ng-model="content.isSelected" 
+                                                    ng-change="" />
+                </td>
+                <td class="dataCell" ng-repeat="field in headerValues" style="white-space: nowrap;">
+                    <span ng-show="field == 'Title'" class="docIconHolder">
+                        <span ng-class="content.iconClass" style="padding-left:20px;"></span>
+                        <a style="cursor: pointer;text-decoration:underline;" href="/HDC/{{content.Id}}" target="_blank" title="{{content.title}}">{{removeHtmlEscaping(content.title)}}</a>
+                    </span>
+                    <span ng-show="field == 'Rating'">{{content.rating}}</span>
+                    <span ng-show="field == 'Size'">{{content.size}}</span>
+                    <span ng-show="field == 'Author'">
+                        <a style="cursor: pointer;text-decoration:underline;" href="/HDC/{{content.authorId}}" target="_blank">{{content.authorName}}</a>
+                    </span>
+                    <span ng-show="field == 'Last Modified'">{{parseResult(content.lastModifiedDateString)}}</span>
+                    <span ng-show="field == 'Publication Date'">{{parseResult(content.publicationDateString)}}</span>
+                </td>
+            </tr>
+            <tr class="dataRowExtra" ng-show="displayOptions.isDisplayedDescription">
+                <td class="dataCell"></td>
+                <td  class="dataCell textColor" style="line-height: 1.2em;" colspan="{{headerValues.length}}">
+                    {{parseResult(content.description)}}
+                </td>
+            </tr>
+            <tr class="dataRowExtra" ng-show="displayOptions.isDisplayedTag">
+                <td class="dataCell"></td>
+                <td  class="dataCell textColor" colspan="{{headerValues.length}}">
+                    <strong>Tags: </strong>
+                    <a ng-repeat="tag in content.tags" ng-click="filterContents('tags',tag,tag,true)">{{($index > 0 ? ' , ' : '')}}{{tag}} </a>
+                </td>
+            </tr>
+            <tr class="dataRowExtra" ng-show="displayOptions.isDisplayedLocation">
+                <td class="dataCell"></td>
+                <td  class="dataCell textColor" colspan="{{headerValues.length}}">
+                    <strong>My Libraries: </strong>
+                    <a ng-click="goSearch1(content.libraryId);">{{(content.libraryId == '' ? 'Private Library' : libMap[content.libraryId])}}</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div ng-show="allFilteredContents.length == 0" style="border: 1px solid #e0e3e5;background-color: white;margin-bottom: 10px;padding-left: 5px;">No Content Found</div>
+    </div>
+</apex:page>

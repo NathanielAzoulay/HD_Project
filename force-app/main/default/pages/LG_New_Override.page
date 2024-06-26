@@ -1,0 +1,4 @@
+<apex:page standardController="LG__c" extensions="LG_New_OverrideCtrl" action="{!doRedirect}">
+
+    
+</apex:page>

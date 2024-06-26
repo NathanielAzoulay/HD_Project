@@ -1,0 +1,44 @@
+<apex:page standardController="Account"  readOnly="true" showChat="false" docType="html-5.0">
+<vs:importvisualstrap />
+<vs:visualstrapblock >
+<apex:dataTable value="{!4}"  styleClass="table" var="Acc" >
+  <!-- Goals And Achievements Report -->
+     <!--
+        <apex:column >
+         <apex:outputLink value="/apex/RsGoalsAchievementsGlobal?id={!Account.Id}"  target="_blank" >Run Goals and Achievement Report      
+        </apex:outputLink>
+        </apex:column>
+        -->
+          <!-- Student Continuation Statistics -->
+         <apex:column >
+        <apex:outputLink value="/00OD0000006vpcp"  target="_blank" >Student Continuation Statistics              
+        </apex:outputLink>
+        </apex:column>
+         <apex:column >
+        <apex:outputLink value="/00OD0000006vpov?pv4={!CASESAFEID(Account.MF_ID__c)}"  target="_blank" rendered="{!Account.Account_Type__c='MF'}" >Users Login            
+        </apex:outputLink>
+       <!--<apex:outputLink value="/00OD0000006vpov?pv3={!CASESAFEID(Account.Name)}"  target="_blank" rendered="{!NOT (Account.Account_Type__c='MF')}" >Users Login            
+        </apex:outputLink>-->
+
+        </apex:column> 
+        <!--
+         <apex:column >
+         <apex:outputLink value="/apex/RS_VFP_CourseSubTypesShringReport?PartnerUserId={!CASESAFEID (Account.ID)}"  target="_blank" >Course Sub Types Sharing       
+        </apex:outputLink>
+        </apex:column>
+        -->
+</apex:dataTable>
+</vs:visualstrapblock>
+  <!--
+      
+    <vs:row > 
+       <vs:column type="col-md-1">
+            <apex:outputLink value="/apex/RsGoalsAchievementsGlobal?id={!Account.Id}"  target="_blank" >Run Goals and Achievement Report      
+            </apex:outputLink>
+       </vs:column> 
+       <vs:column type="col-md-1">
+            <apex:outputLink value="/00OD0000006vpcp"  target="_blank" >Student Continuation Statistics              
+            </apex:outputLink>
+       </vs:column>      
+    </vs:row>-->
+</apex:page>

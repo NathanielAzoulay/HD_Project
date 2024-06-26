@@ -1,0 +1,55 @@
+<apex:page standardController="Product_Price__c" recordSetVar="unused" sidebar="false">
+
+<!-- for this page to work with a specific custom object, change standController="entityname" to custom object api name  
+    For example, if custom object name is Warehouse__c, change first part of the first line to standardController="warehouse__c" -->
+
+    
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+
+<apex:column headerValue="Product Price Code">
+<apex:outputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="Price List Title">
+<apex:outputField value="{!a.Price_List_Title__c}"/>
+</apex:column>
+<apex:column headerValue="PN Code">
+<apex:outputField value="{!a.PN_Code__c}"/>
+</apex:column>
+<apex:column headerValue="Product Name">
+<apex:outputField value="{!a.Product_Name__c}"/>
+</apex:column>
+<apex:column headerValue="Base Course">
+<apex:outputField value="{!a.Base_Course__c}"/>
+</apex:column>
+<apex:column headerValue="Product Image">
+<apex:inputField value="{!a.Product_Image__c}"/>
+</apex:column>
+<apex:column headerValue="Recommended Price for Student">
+<apex:outputField value="{!a.Recommended_Price_for_Student__c}"/>
+</apex:column>
+<apex:column headerValue="Selling Price">
+<apex:inputField value="{!a.Selling_Price__c}"/>
+</apex:column>
+<apex:column headerValue="Purchase Price">
+<apex:outputField value="{!a.Purchase_Price__c}"/>
+</apex:column>
+
+
+
+
+
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

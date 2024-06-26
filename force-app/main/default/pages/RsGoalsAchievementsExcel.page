@@ -1,0 +1,15 @@
+<apex:page standardController="Account" extensions="RsGoalsAchievements" readOnly="true"  standardStylesheets="false" showHeader="false" contentType="application/vnd.ms-excel#GoalsAndAchievement{!rViewOption}.xls">
+    <apex:pageBlock >
+    <apex:dataTable value="{!IF (rViewOption='CalendarYear',GAChart,GAScoolYearChart)}" var="a"  >
+      <apex:column value="{!a.ryear}"  headerValue="Year" />
+	  <apex:column value="{!a.Actual_StudentsLKG}" headerValue="Actual Students (LKG)" />
+      <apex:column value="{!a.Actual_StudentsNonLKG}" headerValue="Actual Students (Non LKG)" />
+	  <apex:column value="{!a.Actual_Students}" headerValue="Total Actual Students" />
+	  <apex:column value="{!a.Calculated_StudentsLKG}" headerValue="Calculated Students (LKG) "/>
+	  <apex:column value="{!a.Calculated_StudentsNonLKG}" headerValue="Calculated Students (Non LKG)"/>
+      <apex:column value="{!a.Calculated_Students}" headerValue="Total Calculated Students "/>
+	  <apex:column value="{!a.Goal}" headerValue="Goal" />
+      <apex:column value="{!a.Drop_Out}" headerValue="Drop Out"/>
+   </apex:dataTable>
+ </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,105 @@
+<apex:page docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" standardStylesheets="false" sidebar="false" showHeader="false" standardController="LG__c" extensions="LGDeleteLessons_Ctl">
+    
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/jquery-1.8.2.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQuery, '/postmessage/jquery.ba-postmessage.js')}"/>
+
+        <script type="text/javascript">
+            var j$ = jQuery.noConflict();
+    
+            var parent_domain = '{!$CurrentPage.parameters.parent_domain}';
+    
+            j$(document).ready(function() {
+                j$('input[id$=btnCloseModalDialog]').click(function(event) {
+                    event.preventDefault();
+                    closeModalDialog();
+                });
+            });
+            
+            function closeModalDialog() {
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog';
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                ); 
+            }
+            
+            function closeModalDialogAndRedirect() {
+                var redirectUrl = j$('input[id$=redirectUrl]').val();
+                
+                var cross_result = new Object();
+                cross_result.action = 'close_modal_dialog_redirect';
+                cross_result.redirect_url = redirectUrl;
+            
+                j$.postMessage(
+                    cross_result,
+                    parent_domain,
+                    parent
+                );
+            }
+        </script>
+        <style>
+            .bootstrap-sf1 input[type=date], .bootstrap-sf1 input[type=datetime-local], .bootstrap-sf1 input[type=month], .bootstrap-sf1 input[type=time] {
+                line-height: inherit !important;
+            }
+        </style>
+    </head>
+    
+    <link href="{!URLFOR($Resource.Bootstrap4SW, 'css/bootstrap-namespaced.min.css')}" rel="stylesheet"/> 
+    
+    <div class="bootstrap-sf1" style="background: transparent!important;">    
+        
+        <apex:outputPanel id="FailurePanel" layout="none" rendered="{!NOT(ISBLANK(showError))}">        
+            <br/>
+            <div class="col-md-4 text-center"> 
+                <div class="alert alert-error" role="alert">
+                    <p>There was an error. If the problem persists, please contact the system administrator <br/> 
+                       <br/> 
+                       <span style="color:red;">{!showError}</span>
+                       <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+                    </p>
+                </div>
+            </div>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="SuccessPanel" layout="none" rendered="{!showDone && ISBLANK(showDoneMjs)}">        
+            <br/>
+            <div class="col-md-4 text-center"> 
+                <div class="alert alert-info" role="alert"><p>The action was submitted, refresh your layout to see the changes.</p></div>
+                <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+            </div>
+        </apex:outputPanel>
+        <apex:form >
+            <apex:outputPanel id="SuccessPanel2" layout="none" rendered="{!showDone && NOT(ISBLANK(showDoneMjs))}">        
+                <br/>
+                <div class="col-md-4 text-center"> 
+                    <div class="alert alert-info" role="alert"><p>No Lessons were found</p></div>
+                    <button id="btnCloseModalDialog1" type="button" class="btn btn-default" onClick="closeModalDialog();">Close</button>
+                    <apex:commandButton styleClass="btn btn-default" value="Continue" action="{!doAgain}" id="btnSubmit2" />                
+                </div>
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="needInformationPanel" layout="none" rendered="{!showForm}">
+                
+                    
+                    <div class="col-md-4 text-center confimPanel" id="secondPanel1">
+                        Are you sure you want to delete all LG Lessons without status?
+                        <button id="btnCloseModalDialog2" type="button" class="btn btn-default" onClick="closeModalDialog();">No</button>
+                        <button id="btnContinueModalDialog1" type="button" class="btn btn-default" onClick="j$( '.confimPanel' ).toggle()">Yes</button>
+                    </div>            
+                                
+                    <div class="col-md-4 text-center confimPanel" id="secondPanel2" style="display: none">  
+                        <div class="alert alert-warning" role="alert">
+                        <p>Please specify a date to start the delete: <apex:input required="true" type="date" value="{!selectedDate}"/> </p>      
+                        </div>
+                        <apex:commandButton styleClass="btn btn-default" value="Delete Lessons" action="{!doDelete}" id="btnSubmit" />
+                        <button id="btnCloseModalDialog3" type="button" class="btn btn-default" onClick="closeModalDialog();">Cancel</button>
+                    </div>
+            </apex:outputPanel>  
+        </apex:form>
+    </div>
+</apex:page>

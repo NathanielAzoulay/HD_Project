@@ -1,0 +1,255 @@
+<apex:page controller="ContentDisplayOptionsController" id="pg" >
+    
+    <style>
+        .container{
+        width:100%;
+        }
+        .table {
+        width: 100%;
+        }
+        .top{
+        background-color : grey;
+        background: url('/img/alohaSkin/overlayTopLft.png') left top no-repeat;
+        }
+        .top_left{
+        font-weight : bold;
+        font-size : 15px;
+        float : left;
+        padding : 8px 6px 8px 12px;
+        }
+        .top_right{
+        font-weight : bold;
+        float : right;
+        font-size : 15px;
+        margin : 6px 20px 0px 0px;
+        border-radius : 2px;
+        background-color : white;
+        width: 2px;
+        height: 2px;
+        }
+        .heading{
+        font-weight : bold;
+        font-size: 13px;
+        padding : 10px 5px 10px 20px;
+        }
+        .middle{
+        border: 1px solid #000;
+        border-bottom: 0px;
+        colspan: 2;
+        }
+        .bottom{
+        margin-left : 36%;
+        padding-top: 5px;
+        padding-bottom: 10px;
+        }
+        .a{
+        margin : 10px;
+        }
+        .section2 {
+        background-color: #e6e6dd;
+        border-top: 2px solid #c3c3c3;
+        padding: 0px 0 0 5px;  
+        border: 1px solid #000;
+        border-top: 0px;
+        }
+        .duelingListBox {
+        padding-left: 5%;
+        padding-right: 5%
+        }
+        .requiredInput {
+            display:inline;
+        }
+        .requiredBlock {
+            display:inline;
+        }
+    </style>
+    <div class = "container">
+        <apex:form id="frm">
+            <table class = "table">
+                <tr class = "top">
+                    <td class = "top_left">
+                        Display Option
+                    </td>
+                    <td class = "top_right">
+                        <div style="cursor:pointer" ng-click="showDisplayOptions = false">x</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class = "heading">
+                        Use this page to customize how your content search results are displayed.
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 20px;padding-right: 20px;" colspan = "2">
+                        <div class = "middle">
+                            <apex:outputPanel id="multiselectPanel" layout="block" styleClass="duelingListBox">
+                                <table class="layout">
+                                    <tbody>
+                                        <tr>
+                                            <td class="selectCell">
+                                                <apex:outputPanel layout="block" styleClass="selectTitle">
+                                                    <apex:outputLabel value="Available Columns" for="multiselectPanel:leftList" />
+                                                </apex:outputPanel>
+                                                <select id="multiselectPanel:leftList" class="multilist" multiple="multiple" size="{!size}" style="width: {!width};">
+                                                    <apex:repeat value="{!leftOptions}" var="option">
+                                                        <option value="{!option.value}">{!option.label}</option>
+                                                    </apex:repeat>
+                                                </select>
+                                            </td>
+                                            <td class="buttonCell">
+                                                <apex:outputPanel layout="block" styleClass="text">
+                                                    <apex:outputLink styleClass="btn" value="javascript:moveSelectedOptions('multiselectPanel:leftList', 'multiselectPanel:rightList', '{!$Component.pg}:frm:leftHidden', '{!$Component.pg}:frm:rightHidden');" id="btnRight">
+                                                        Add
+                                                    </apex:outputLink>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel layout="block" styleClass="text">
+                                                    <apex:outputLink styleClass="btn" value="javascript:moveSelectedOptions('multiselectPanel:rightList', 'multiselectPanel:leftList', '{!$Component.pg}:frm:rightHidden', '{!$Component.pg}:frm:leftHidden');" id="btnLeft">
+                                                        Remove
+                                                    </apex:outputLink>
+                                                </apex:outputPanel>
+                                            </td>
+                                            <td class="selectCell">
+                                                <apex:outputPanel layout="block" styleClass="selectTitle">
+                                                    <apex:outputLabel value="Selected Columns" for="multiselectPanel:rightList" />
+                                                </apex:outputPanel>
+                                                <select id="multiselectPanel:rightList" class="multilist" multiple="multiple" size="{!size}" style="width: {!width};">
+                                                    <apex:repeat value="{!rightOptions}" var="option">
+                                                        <option value="{!option.value}">{!option.label}</option>
+                                                    </apex:repeat>
+                                                </select>
+                                            </td>
+                                            <td class="buttonCell udArrows">       
+                                                <apex:outputPanel layout="block" styleClass="text">
+                                                    <apex:outputLink styleClass="btn" value="javascript:slideSelectedOptionsUp('multiselectPanel:rightList', '{!$Component.pg}:frm:rightHidden');" id="upBtn">
+                                                        Move Up
+                                                    </apex:outputLink>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel layout="block" styleClass="text">
+                                                    <apex:outputLink styleClass="btn" value="javascript:slideSelectedOptionsDown('multiselectPanel:rightList', '{!$Component.pg}:frm:rightHidden');" id="downBtn">
+                                                        Move Down
+                                                    </apex:outputLink>
+                                                </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <apex:inputHidden value="{!leftOptionsHidden}" id="leftHidden" />
+                                <apex:inputHidden value="{!rightOptionsHidden}" id="rightHidden" />
+                            </apex:outputPanel>
+                        </div>
+                        <div class="section2">
+                            <b>Show: </b><apex:inputField value="{!displayOption.Result_per_Page__c}" style="font: 11px BlinkMacSystemFont;display:inline;"/> results per page <br/>
+                            &nbsp;&nbsp;&nbsp;<apex:inputField value="{!displayOption.Display_Tags__c}"/> Display Tags <br/>
+                            &nbsp;&nbsp;&nbsp;<apex:inputField value="{!displayOption.Display_Description__c}"/> Display Descriptions <br/>
+                            &nbsp;&nbsp;&nbsp;<apex:inputField value="{!displayOption.Display_Location__c}"/> Display Locations<br/>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "bottom" ng-model="textstr">
+                            <apex:commandButton styleClass="a" value="Save" action="{!Save}" reRender="frm" onComplete="closeWindow();"/>
+                            <apex:commandButton styleClass="a" value="Reset to Defaults" action="{!resetToDefault}" reRender="frm" onComplete="closeWindow();"/>
+                            <apex:commandButton value="Cancel" onComplete="closeWindow();"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <apex:actionFunction name="save"/>
+        </apex:form>
+    </div>
+    <script type="text/javascript">
+    
+    if (!buildOutputString) {
+        // Create a string from the content of a listbox
+        var buildOutputString = function(listBox, hiddenInput) {
+            var str = '';
+            for ( var x = 0; x < listBox.options.length; x++) {
+                
+                str += encodeURIComponent(listBox.options[x].value) + '&' + encodeURIComponent(listBox.options[x].text) + '&';
+            }
+            str.length--;
+            hiddenInput.value = str.slice(0, -1);
+        }
+        }
+    if (!moveSelectedOptions) {
+        // Move the selected options in the idFrom listbox to the idTo
+        // listbox, updating the corresponding strings in idHdnFrom and
+        // idHdnTo
+        var moveSelectedOptions = function(idFrom, idTo, idHdnFrom, idHdnTo) {
+            listFrom = document.getElementById(idFrom);
+            listTo = document.getElementById(idTo);
+            
+            for ( var x = 0; x < listTo.options.length; x++) {
+                listTo.options[x].selected = false;
+            }
+            
+            for ( var x = 0; x < listFrom.options.length; x++) {
+                if (listFrom.options[x].selected == true) {
+                    listTo.appendChild(listFrom.options[x]);
+                    x--;
+                }
+            }
+            
+            listTo.focus();
+            
+            buildOutputString(listFrom, document.getElementById(idHdnFrom));
+            buildOutputString(listTo, document.getElementById(idHdnTo));
+        }
+        } 
+    if (!slideSelectedOptionsUp) {
+        // Slide the selected options in the idList listbox up by one position,
+        // updating the corresponding string in idHidden
+        var slideSelectedOptionsUp = function(idList, idHidden) {
+            listBox = document.getElementById(idList);
+            
+            var len = listBox.options.length;
+            
+            if (len > 0 && listBox.options[0].selected == true) {
+                return;
+            }
+            
+            for ( var x = 1; x < len; x++) {
+                if (listBox.options[x].selected == true) {
+                    listBox.insertBefore(listBox.options[x],
+                                         listBox.options[x - 1]);
+                }
+            }
+            listBox.focus();
+            buildOutputString(listBox, document.getElementById(idHidden));
+        }
+        }
+    
+    if (!slideSelectedOptionsDown) {
+        // Slide the selected options in the idList listbox down by one position,
+        // updating the corresponding string in idHidden
+        var slideSelectedOptionsDown = function(idList, idHidden) {
+            listBox = document.getElementById(idList);
+            
+            var len = listBox.options.length;
+            
+            if (len > 0 && listBox.options[len - 1].selected == true) {
+                return;
+            }
+            
+            for ( var x = listBox.options.length - 2; x >= 0; x--) {
+                if (listBox.options[x].selected == true) {
+                    listBox.insertBefore(listBox.options[x + 1],
+                                         listBox.options[x]);
+                }
+            }
+            
+            listBox.focus();
+            buildOutputString(listBox, document.getElementById(idHidden));
+        }
+        }
+    
+    // initialize the string representations
+    
+    buildOutputString(document.getElementById('multiselectPanel:leftList'),
+                      document.getElementById('{!$Component.pg}:frm:leftHidden'));
+    
+    buildOutputString(document.getElementById('multiselectPanel:rightList'),
+                      document.getElementById('{!$Component.pg}:frm:rightHidden'));
+    </script>
+</apex:page>

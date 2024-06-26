@@ -1,0 +1,936 @@
+<apex:page controller="MassEmailControllerNew" sidebar="false" tabStyle="Contact">
+    <html>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="{!URLFOR($Resource.AngularJS)}"></script>
+        <apex:stylesheet value="{!URLFOR($Resource.JQueryUI, 'jquery-ui-1.9.2.custom.min.css')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.CKEditor, 'ckeditor/ckeditor.js')}"/>
+        <style>
+            
+            tr.dataRow { 
+                background-color:white; 
+            }
+            tr.dataRow:hover { 
+                background-color: #e3f3ff;
+            }
+            #loading-image {
+               position: fixed;
+               top: 40%;
+               left: 47%;
+               width:4%;
+            } 
+            #loading {
+               width: 100%;
+               height: 100%;
+               background-color: rgba(255, 255, 255, 1) !important;
+               left: 0;
+               right: 0;
+               top: 0;
+               bottom: 0;
+               position: fixed;
+               display: block;
+               text-align: center;
+               z-index: 9005;
+            } 
+            .paginatorWrap{
+                background: url("/img/alohaSkin/listFooter.png") repeat-x scroll 0 0 #F2F2F2;
+                border: 1px solid #EAEAEA;
+                background-color: #F3F3F3;
+                border-top: 1px solid #FFFFFF;
+                padding: 5px;
+            }  
+            /* The Modal (background) */
+.modal {
+    //display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 200px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    height: 300px;
+    overflow: scroll;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: left;
+    margin-left: 90%;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+        </style>
+        <script>
+            var massEmailApp = angular.module("massEmailApp",[]);
+            var massEmailCon = massEmailApp.controller('massEmailCon', function($scope, $q) {
+                $scope.mode = '{!JSENCODE(mode)}';
+                $scope.ids = '{!JSENCODE(recordIds)}';
+                $scope.hasAccess = '{!hasAccess}';
+                $scope.userName = '{!userName}';
+                $scope.contacts = [];
+                $scope.ucontacts = [];
+                $scope.folders = {};
+                $scope.selectFolder = '';
+                $scope.templates = [];
+                $scope.isNext = false;
+                $scope.selectedTemplate = '';
+                $scope.isPreview = false;
+                $scope.subject = '';
+                $scope.templateBody = '';
+                $scope.contactId = '';
+                $scope.recId = '';
+                $scope.isloading = true;
+                $scope.errorMsg ='';
+                $scope.isError = false;
+                $scope.isSent = false;
+                $scope.isSuccess = false;
+                $scope.objects = [];
+                $scope.fields = [];
+                $scope.selectedObj = '';
+                $scope.selectedField = '';
+                $scope.selectedFolder = '';
+                $scope.mergeField = '';
+                $scope.isFilterAppiled = false;
+                
+                $scope.filterFields = [];
+                $scope.tempfilterFields = [];
+                //$scope.filterObject = 'Contact';
+                $scope.operators = [];
+                $scope.fieldWrapperList = [];
+                $scope.fieldWrapperListold = [];
+                $scope.fieldTypeMap = {};
+                
+                $scope.size = {!pageSize};
+                $scope.pageNumber = 1;
+                $scope.hasPrevious = false;
+                $scope.hasNext = false;
+                $scope.contactMap = {};
+                $scope.contactIdMap = {};
+                $scope.reseted = false;
+                $scope.totalRecords = 0;
+                
+                $scope.intialFunction = function(){
+                    console.log($scope.mode);
+                    console.log($scope.size);
+                    if($scope.hasAccess == 'true'){
+                        $scope.getunSubscriberList().then(function(result){
+                            angular.forEach(result,function(item) {
+                                if(item.objectName.indexOf('Error: ') >= 0){
+                                    $scope.errorMsg = $scope.parseResult(item.objectName);
+                                    $scope.isError = true;
+                                }
+                                else{
+                                    $scope.ucontacts.push(item);
+                                }
+                            });
+                        });
+                        $scope.getSubscriberList().then(function(result1){
+                            $scope.addRecords(result1);
+                            $scope.reseted = true;
+                            $scope.isloading = false;
+                            console.log($scope.contactMap);
+                            $scope.getFilterFields().then(function(result){
+                                $scope.filterFields = angular.copy(result);
+                                angular.forEach($scope.filterFields,function(item) {
+                                    $scope.fieldTypeMap[item.name] = item.type;
+                                });
+                                $scope.operators.push('--None--');
+                                $scope.operators.push('equals');
+                                $scope.operators.push('not equal to');
+                                for(var i = 1 ;i<=5;i++){
+                                    $scope.fieldWrapperList.push({'field':'','operator':'--None--','value':'','objSelected':'','rowNumber':i,'fieldTypeMap':$scope.fieldTypeMap,'operators':$scope.operators,'options':{},'type':''});
+                                }
+                                
+                            });
+                            
+                        });
+                        
+                    }
+                    else{
+                        $scope.isloading = false;
+                        $scope.errorMsg = 'You have not access to Mass Email functionality.';
+                    }
+                }
+                $scope.search = function(){
+                    
+                    $scope.isloading = true;
+                    $scope.isError = false;
+                    /*for(var i=0; i < $scope.fieldWrapperList.length;i++){
+                        var fieldObj = $scope.fieldWrapperList[i];
+                        if(i==0&&((fieldObj.field == null || fieldObj.field == '' || fieldObj.field == '--None--') || (fieldObj.operator == null || fieldObj.operator == '' || fieldObj.operator == '--None--'))){
+                            $scope.errorMsg = 'Please enter valid filter criteria.';
+                            $scope.isError = true;
+                        }
+                        if(((fieldObj.field != null && fieldObj.field != '' && fieldObj.field != '--None--') || (fieldObj.operator != null && fieldObj.operator != '' && fieldObj.operator != '--None--')) && ((fieldObj.field == null || fieldObj.field == '' || fieldObj.field == '--None--') || (fieldObj.operator == null || fieldObj.operator == '' || fieldObj.operator == '--None--'))){
+                            $scope.errorMsg = 'Please enter valid filter criteria.';
+                            $scope.isError = true;
+                        }
+                    }*/
+                    if(!$scope.isError){
+                        $scope.contacts = [];
+                        $scope.pageNumber = 1;
+                        $scope.contactMap = {};
+                        $scope.contactIdMap = {};
+                        $scope.hasNext = false;
+                        $scope.hasPrevious = false;
+                        $scope.isFilterAppiled = true;
+                        $scope.reseted = false;
+                        $scope.fieldWrapperListold = angular.copy($scope.fieldWrapperList);
+                        $scope.getSearchResult().then(function(result){
+                            $scope.addRecords(result);
+                            $scope.reseted = true;
+                            $scope.isloading = false;
+                        });
+                    }
+                    else{
+                        $scope.isloading = false;
+                    }
+                }
+                $scope.nextPage = function(){
+                    
+                    $scope.isloading = true;
+                    
+                    if($scope.hasNext){
+                        $scope.hasNext = false;
+                        $scope.pageNumber = $scope.pageNumber + 1;
+                        $scope.contacts = [];
+                        if(Object.keys($scope.contactMap).length >= $scope.pageNumber){
+                            angular.forEach($scope.contactMap[$scope.pageNumber],function(item) {
+                                if($scope.size > $scope.contacts.length){
+                                    $scope.contacts.push(item);
+                                }
+                            });
+                            if($scope.size < $scope.contactMap[$scope.pageNumber].length){
+                                $scope.hasNext = true;
+                            }
+                        }
+                        console.log($scope.contacts);
+                        if($scope.contacts.length == 0){
+                            if($scope.isFilterAppiled){
+                                $scope.getSearchResult().then(function(result){
+                                    $scope.addRecords(result);
+                                    $scope.isloading = false;
+                                    console.log($scope.contactMap);
+                                });
+                            }
+                            else{
+                                $scope.getSubscriberList().then(function(result){
+                                    $scope.addRecords(result);
+                                    $scope.isloading = false;
+                                    console.log($scope.contactMap);
+                                });
+                            }
+                        }
+                        else{
+                            $scope.isloading = false;
+                        }
+                        $scope.hasPrevious = true;
+                    }
+                }
+                $scope.addRecords = function(result1){
+                    var result = result1.contacts;
+                    if(result1.error != ''){
+                        $scope.errorMsg = $scope.parseResult(result1.error);
+                        $scope.isError = true;
+                    }
+                    if($scope.reseted == false){
+                        $scope.totalRecords = result1.totalContacts;
+                    }
+                    var ids = [];
+                    if($scope.size < result.length){
+                        $scope.hasNext = true;
+                    }
+                    console.log(result);
+                    $scope.contactMap[$scope.pageNumber] = angular.copy(result);
+                    angular.forEach($scope.contactMap[$scope.pageNumber],function(item) {
+                        if($scope.size > $scope.contacts.length){
+                            $scope.contacts.push(item);
+                            ids.push(item.recId);
+                        }
+                    });
+                    $scope.contactIdMap[$scope.pageNumber] = angular.copy(ids);
+                }
+                $scope.previousPage = function(){
+                    if($scope.hasPrevious){
+                        $scope.pageNumber = $scope.pageNumber - 1;
+                        $scope.hasPrevious = false;
+                        $scope.hasNext = true;
+                        $scope.contacts = [];
+                        //$scope.contacts = angular.copy($scope.contactMap[$scope.pageNumber]);
+                        angular.forEach($scope.contactMap[$scope.pageNumber],function(item) {
+                            if($scope.size > $scope.contacts.length){
+                                $scope.contacts.push(item);
+                            }
+                        });
+                        if($scope.pageNumber > 1){
+                            $scope.hasPrevious = true;
+                        }
+                    }
+                }
+                
+                $scope.onFieldChange = function(rowNo){
+                    $scope.isloading = true;
+                    $scope.operators = [];
+                    $scope.operators.push('--None--');
+                    var fieldObj;
+                    for(var i=0; i < $scope.fieldWrapperList.length;i++){
+                        if(rowNo == $scope.fieldWrapperList[i].rowNumber){
+                            fieldObj = $scope.fieldWrapperList[i];
+                        }
+                    }
+                    fieldObj.value = '';
+                    fieldObj.operator = '--None--';
+                    if($scope.fieldTypeMap[fieldObj.field] != 'address'){
+                        $scope.operators.push('equals');
+                        $scope.operators.push('not equal to');
+                    }
+                    if(fieldObj.field != null && fieldObj.field != '' && fieldObj.field != '--None--'){
+                        if($scope.fieldTypeMap[fieldObj.field] == 'text' || $scope.fieldTypeMap[fieldObj.field] == 'picklist' || $scope.fieldTypeMap[fieldObj.field] == 'email'){
+                            $scope.operators.push('starts with');
+                            $scope.operators.push('contains');
+                            $scope.operators.push('does not contain');
+                        }
+                        else if($scope.fieldTypeMap[fieldObj.field] == 'multipicklist'){
+                            $scope.operators.push('includes');
+                            $scope.operators.push('excludes');
+                        }
+                        else if($scope.fieldTypeMap[fieldObj.field] == 'address'){
+                            $scope.operators.push('contains');
+                            $scope.operators.push('does not contain');
+                        }
+                        else if($scope.fieldTypeMap[fieldObj.field] == 'number' || $scope.fieldTypeMap[fieldObj.field] == 'date' || $scope.fieldTypeMap[fieldObj.field] == 'datetime'){
+                            $scope.operators.push('less than');
+                            $scope.operators.push('greater than');
+                            $scope.operators.push('less or equal');
+                            $scope.operators.push('greater or equal');
+                        }
+                    }
+                    fieldObj.operators = $scope.operators;
+                    fieldObj.type = $scope.fieldTypeMap[fieldObj.field];
+                    angular.forEach($scope.filterFields,function(item) {
+                        if(item.name == fieldObj.field){
+                            fieldObj.options = item.picklistValues;
+                        }
+                    });
+                    console.log(fieldObj);
+                    $scope.isloading = false;
+                }
+                $scope.changeFilterObject = function(){
+                    /*$scope.filterFields = [];
+                    angular.forEach($scope.tempfilterFields,function(item) {
+                        if(item.objectName == $scope.filterObject || item.objectName == ''){
+                            $scope.filterFields.push(item);
+                        }
+                    });
+                    $scope.operators = [];
+                    $scope.fieldWrapperList = [];
+                    for(var i = 1 ;i<=5;i++){
+                        $scope.fieldWrapperList.push({'field':'','operator':'--None--','value':'','objSelected':'','rowNumber':i,'fieldTypeMap':$scope.fieldTypeMap});
+                    }
+                    $scope.operators.push('--None--');
+                    $scope.operators.push('equals');
+                    $scope.operators.push('not equal to');*/
+                }
+                $scope.selectedRecords = 0;
+                $scope.next = function(){
+                    var isAny = false;
+                    $scope.templates = [];
+                    $scope.isSuccess = false;
+                    $scope.isError = false;
+                    angular.forEach($scope.contactMap,function(value,key) {
+                        console.log($scope.contactMap[key]);
+                        $scope.contactMap[key].some(function (value, index, _ary) {
+                            if(value.isSelected == true){
+                                isAny = true;
+                                if($scope.contactId == ''){
+                                    $scope.contactId = value.id;
+                                    $scope.recId = value.recId;
+                                }
+                                return isAny;
+                            }
+                        });
+                    });
+                    if(isAny){
+                        $scope.isNext = true;
+                        $scope.isloading = true;
+                        $scope.getFolders().then(function(result){
+                            $scope.folders = angular.copy(result);
+                            angular.forEach($scope.folders,function(value,key) {
+                                if($scope.selectedFolder == '' && key != '')
+                                    $scope.selectedFolder = key;
+                            });
+                            //if($scope.selectedFolder != '')
+                                //$scope.changeFolder();
+                            $scope.isloading = false;
+                        });
+                        $scope.getTemplates().then(function(result){
+                        console.log("get results",result);
+                            $scope.templates = angular.copy(result);
+                            console.log("get Templates",$scope.templates);
+                            $scope.isloading = false;
+                        });
+                        /*$scope.getTemplates().then(function(result){
+                            $scope.templates = angular.copy(result);
+                            console.log($scope.templates);
+                            $scope.isloading = false;
+                        });*/
+                        
+                        $scope.getFieldObjects('').then(function(result){
+                            $scope.objects = angular.copy(result);
+                            console.log($scope.objects);
+                        });
+                        angular.forEach($scope.contactMap,function(value,key) {
+                            angular.forEach($scope.contactMap[key],function(item) {
+                                if(item.isSelected){
+                                    $scope.selectedRecords += 1;
+                                }
+                            });
+                        });
+                    }
+                    else{
+                        $scope.errorMsg = 'Please select at least one member.';
+                        $scope.isError = true;
+                    }
+                }
+                $scope.changeObject = function(){
+                    $scope.fields = [];
+                    $scope.selectedField = '';
+                    $scope.mergeField = '';
+                    $scope.getFieldObjects($scope.selectedObj).then(function(result){
+                        $scope.fields = angular.copy(result);
+                        console.log($scope.objects);
+                    });
+                }
+                
+                $scope.changeField = function(){
+                    //$scope.selectedField = '';
+                    $scope.mergeField = '';
+                    $scope.getField().then(function(result){
+                        $scope.mergeField = angular.copy(result);
+                        console.log($scope.mergeField);
+                    });
+                }
+                
+                /*$scope.changeFolder = function(){
+                    $scope.templates = [];
+                    $scope.isloading = true;
+                    $scope.isSuccess = false;
+                    $scope.isError = false;
+                    if($scope.selectedFolder != ''){
+                        $scope.getTemplates().then(function(result){
+                            $scope.templates = angular.copy(result);
+                            console.log($scope.templates);
+                            $scope.isloading = false;
+                        });
+                    }
+                }*/
+                $scope.changeTemplate = function(){
+                    $scope.isSuccess = false;
+                    $scope.isError = false;
+                    console.log("Change Template",$scope.templates);
+                    angular.forEach($scope.templates,function(item) {
+                        if(item.id == $scope.selectedTemplate){
+                            console.log(item.htmlBody);
+                            var html = $scope.parseResult(item.htmlBody);
+                            console.log(html);
+                            CKEDITOR.instances['txtSubject'].setData(html);
+                            $scope.subject = $scope.parseResult(item.subject);
+                        }
+                    });
+                }
+                $scope.parseResult = function(result) {
+                console.log("result::::::",result);
+                    
+                    if (result != null) {
+                        result = result.replace(/&quot/gi, '"');
+                        result = result.replace(/&amp/g, '&');
+                        
+                        //result = result.replace(/amp/g, '&');
+                        result = result.replace(/&lt/g, '<');
+                        result = result.replace(/&gt/g, '>');
+                        result = result.replace(/&#39/g, '\'');
+                        result = result.replace(/;/g, '');
+                        result = result.replace(/&amp/g, '&');
+                        result = result.replace(/&amp/g, '&');
+                        return result;
+                    }
+                }
+                $scope.emailPreview = function() {
+                    $scope.templateBody = CKEDITOR.instances['txtSubject'].getData(); 
+                    //console.log(getHTMLdata);
+                    $scope.isloading = true;
+                    $scope.isError = false;
+                    $scope.previewEmail().then(function(result){
+                        if(result.indexOf('Error: ') >= 0){
+                            $scope.errorMsg = result;
+                            $scope.isError = true;
+                        }
+                        else{
+                            var resultList = result.split('====='); 
+                            //$scope.subject = $scope.parseResult(resultList[0]);
+                            $scope.templateBody = resultList[1];
+                            console.log(result);
+                            $("#divPreview").html($scope.parseResult($scope.templateBody));
+                            $scope.isPreview = true;
+                        }
+                        $scope.isloading = false;
+                    });
+                    
+                }
+                $scope.send = function(){
+                    $scope.isSuccess = false;
+                    $scope.isError = false;
+                    if($scope.subject == ''){
+                        $scope.errorMsg = 'You must enter the subject.';
+                        $scope.isError = true;
+                    }
+                    else{
+                        var selectedIds = {};
+                        $scope.isloading = true;
+                        console.log($scope.subscriberlist);
+                        //$scope.isloading = true;
+                        
+                        angular.forEach($scope.contactMap,function(value,key) {
+                            angular.forEach($scope.contactMap[key],function(item) {
+                                if(item.isSelected && item.isBounced == false){
+                                    
+                                    selectedIds[item.id] = item.recId;
+                                }
+                            });
+                        });
+                        console.log(selectedIds);
+                        var selectedIdsJson = angular.toJson(selectedIds);
+                        $scope.sendEmail(selectedIdsJson).then(function(result){
+                            console.log(result);
+                            if(result != ''){
+                                $scope.isloading = false;
+                                $scope.errorMsg = $scope.parseResult(result);
+                                $scope.isError = true;
+                            }
+                            else{
+                                $scope.isSent = true;
+                                $scope.isloading = false;
+                                $scope.errorMsg = 'Email has been sent succesfully.';
+                                $scope.isSuccess = true;
+                            }
+                        });
+                    }
+                }
+                $scope.previewEmail = function(sids){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.preview}',$scope.templateBody,$scope.recId,
+                        $scope.contactId,$scope.subject,$scope.mode,$scope.ids,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.sendEmail = function(sids){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.sendEmail}',CKEDITOR.instances['txtSubject'].getData(),
+                        sids,$scope.subject,$scope.ids,$scope.mode,$scope.userName,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getFilterFields = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.getFilterFields}',$scope.mode,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getunSubscriberList = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.uncontacts}',$scope.ids,$scope.mode,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getSubscriberList = function(){
+                    var ids = [];
+                    angular.forEach($scope.contactIdMap,function(value,key) {
+                        angular.forEach($scope.contactIdMap[key],function(item) {
+                            ids.push(item);
+                        });
+                    });
+                    var idsJson = angular.toJson(ids);
+                    console.log('call === '+idsJson);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.contacts}',$scope.ids,$scope.mode,idsJson,$scope.reseted,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getSearchResult = function(){
+                    var ids = [];
+                    angular.forEach($scope.contactIdMap,function(value,key) {
+                        angular.forEach($scope.contactIdMap[key],function(item) {
+                            ids.push(item);
+                        });
+                    });
+                    var idsJson = angular.toJson(ids);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.search}',$scope.ids,$scope.mode,
+                        angular.toJson($scope.fieldWrapperListold),idsJson,$scope.reseted,//$scope.filterObject,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.objType = '{!objType}';
+                console.log('Object Type', $scope.objType);
+                $scope.getTemplates = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.emailTemplates}',$scope.objType,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getFolders = function(){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.emailFolders}',
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getFieldObjects = function(objName){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.fetchMergeFields}',objName,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+                $scope.getField = function(objName){
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.MassEmailControllerNew.getField}',$scope.selectedObj,$scope.selectedField,
+                        function(result, event) {
+                            deferred.resolve(result);
+                        },
+                        {escape: true}
+                    );
+                    return deferred.promise;
+                }
+ 
+                $scope.back = function(){
+                    var form = document.createElement("form");
+                    form.setAttribute("method", "POST");
+                    form.setAttribute("action", '{!JSENCODE(retURL)}');
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+                $scope.selectAll = function(){
+                    angular.forEach($scope.contacts,function(item) {
+                        item.isSelected = $scope.allSelected;
+                    });
+                }
+            });
+            
+            function toggleItem(){
+                var cbs = jQuery('.singleSelect');
+                if(cbs.filter(':not(:checked)').length==0){
+                    jQuery("#selectAll").prop('checked', true);
+                }else{
+                    jQuery("#selectAll").prop('checked', false);
+                }
+            }
+            
+        </script>
+        <body ng-app="massEmailApp" ng-cloak="ng-cloak">
+            <form ng-controller="massEmailCon" ng-init="intialFunction();">
+                <div ng-show="isError || hasAccess == 'false'">
+                    <apex:pageMessage summary="{{errorMsg}}" severity="Error" strength="3">
+                    </apex:pageMessage>
+                </div>
+                <div ng-show="isSuccess">
+                    <apex:pageMessage summary="{{errorMsg}}" severity="Confirm" strength="3">
+                    </apex:pageMessage>
+                </div>
+                <div ng-show="hasAccess == 'true'">
+                    <div ng-show="isNext == false">
+                        <apex:pageBlock title="Select Filters">
+                            <!--<div ng-show="mode == 'Campaign'">
+                                <input type="radio" name="optionsChoice1" value="Contact" ng-model="filterObject" ng-click="changeFilterObject('Contact')">Contact</input>
+                                <input type="radio" name="optionsChoice1" value="Lead" ng-model="filterObject" ng-click="changeFilterObject('Lead')">Lead</input>
+                            </div>-->
+                            <apex:pageBlockSection columns="1">
+                                <table class="list " border="0" cellpadding="0" cellspacing="0">
+                                    <tr class="headerRow">
+                                        <th class="headerRow">Field</th>
+                                        <th class="headerRow">Operator</th>
+                                        <th class="headerRow">Value</th>
+                                        <th class="headerRow" style="width:25%;"></th>
+                                    </tr>
+                                    <tr class="dataRow" ng-repeat="fieldObj in fieldWrapperList">
+                                        <td class="dataCell">
+                                            <select style="width:90%;" class="slds-select" ng-model="fieldObj.field" ng-change="onFieldChange(fieldObj.rowNumber)">
+                                                <option ng-repeat="field in filterFields" value="{{field.name}}">{{field.label}}</option>
+                                            </select>
+                                        </td>
+                                        <td class="dataCell">
+                                            <select style="width:90%;" class="slds-select" ng-model="fieldObj.operator">
+                                                <option ng-repeat="option in fieldObj.operators" value="{{option}}">{{option}}</option>
+                                            </select>
+                                        </td>
+                                        <td class="dataCell">
+                                            <input style="width:90%;" class="slds-input" ng-model="fieldObj.value" ng-show="fieldObj.type != 'picklist' && fieldObj.type != 'multipicklist'"/>
+                                            <select style="width:90%;"  class="slds-select" ng-model="fieldObj.value" ng-show="fieldObj.type == 'picklist' || fieldObj.type == 'multipicklist'">
+                                                <option ng-repeat="(key,value) in fieldObj.options" value="{{key}}">{{value}}</option>
+                                            </select>
+                                        </td>
+                                        <td class="dataCell"><div ng-show="fieldObj.type == 'date' || fieldObj.type == 'datetime'">Enter the date value in yyyy-mm-dd format.</div></td>
+                                    </tr>
+                                </table>
+                                
+                            </apex:pageBlockSection>
+                            <apex:pageBlockButtons location="bottom">
+                                <button ng-click="search();" class="btn">Search</button>
+                            </apex:pageBlockButtons>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Select Member(s)">
+                            <apex:pageBlockButtons >
+                                <button ng-click="next();" class="btn">Next</button>
+                                <button ng-click="back();" class="btn">Cancel</button>
+                            </apex:pageBlockButtons>
+                            <div ng-show="contacts.length == 0">
+                                <apex:pageBlockSection title="Subscribed Member(s)" columns="1">
+                                No Records found.
+                                </apex:pageBlockSection>
+                            </div>
+                            <div ng-show="contacts.length > 0">
+                                <apex:pageBlockSection title="Subscribed Member(s)" columns="1">
+                                    <table class="list " border="0" cellpadding="0" cellspacing="0" ng-show="contacts.length > 0">
+                                       
+                                        <tr class="headerRow">
+                                            <th class="headerRow" width="3%">
+                                                <input type="checkbox" id="selectAll" ng-model="allSelected" ng-click="selectAll();"/>
+                                            </th>
+                                            <th width="10%" class="headerRow" ng-repeat="field in contacts[0].fields"> {{parseResult(field.label)}}</th>
+                                        </tr>
+                                       
+                                    </table>
+                                        
+                                    <div style="max-height:100px;overflow:auto;" ng-show="contacts.length > 0">
+                                        <table class="list " border="0" cellpadding="0" cellspacing="0" ng-show="contacts.length > 0">
+                                            <tr class="dataRow" ng-repeat="con in contacts">
+                                                <td width="3%">
+                                                    <input type="checkbox" class="singleSelect" id="singleSelect" onclick="toggleItem();"
+                                                                                    ng-model="con.isSelected" 
+                                                                                    ng-change="" />
+                                                </td>
+                                                <td width="10%" style="padding-left: 1.2%;" class="dataCell" ng-repeat="field in con.fields">{{parseResult(field.value)}}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div layout="block" styleClass="paginatorWrap">
+                                        <div class="paginator" id="pager">
+                                            <span class="left">
+                                                {{(pageNumber * size)+1-size}}-{{(pageNumber * size)-size+contacts.length}} of {{totalRecords}}
+                                            </span>
+                                            <span class="prevNextLinks">            
+                                                <span class="prevNext">
+                                                    <a ng-click="previousPage()" ng-show="hasPrevious" style="cursor:pointer;">
+                                                        <img ng-show="hasPrevious" src="{!URLFOR($Resource.Search_prevarrow)}" width="5px" height="8px" />&nbsp;Previous Page
+                                                    </a>
+                                                </span>
+                                                <span class="prevNext">
+                                                    <a ng-click="nextPage()" ng-show="hasNext" style="cursor:pointer;">Next Page&nbsp; 
+                                                        <img ng-show="hasNext" src="{!URLFOR($Resource.Search_nextarrow)}" width="5px" height="8px" />
+                                                    </a>
+                                                </span>
+                                            </span>  
+                                        </div>
+                                    </div>
+                                </apex:pageBlockSection>
+                            </div>
+                            <div style="max-height:250px;overflow:auto;" ng-show="ucontacts.length > 0">
+                                <apex:pageBlockSection title="Unsubscribed Member(s)" columns="1">
+                                
+                                    <table class="list " border="0" cellpadding="0" cellspacing="0">
+                                        <tr class="headerRow">
+                                            <th class="headerRow" ng-repeat="field in ucontacts[0].fields"> {{parseResult(field.label)}}</th>
+                                        </tr>
+                                        <tr class="dataRow" ng-repeat="con in ucontacts">
+                                            <td class="dataCell" ng-repeat="field in con.fields">{{parseResult(field.value)}}</td>
+                                        </tr>
+                                    </table>
+                                
+                                </apex:pageBlockSection>
+                            </div>
+                        </apex:pageBlock> 
+                    </div>
+                    <div ng-show="isNext">
+                        <apex:pageBlock title="{{isSent ? '' : 'Select Template'}}">
+                            <apex:pageBlockButtons location="top">
+                                <button ng-click="isNext = false" ng-show="!isSent" class="btn">Previous</button>
+                                <button ng-click="emailPreview();" ng-show="!isSent" class="btn">Preview</button>
+                                <button ng-click="send();" ng-show="!isSent" class="btn">Send Email</button>
+                                <button ng-click="back();" ng-show="!isSent" class="btn">Cancel</button>
+                                <button ng-click="back();" ng-show="isSent" class="btn">Back</button>
+                            </apex:pageBlockButtons>
+                            <div ng-show="!isSent">
+                                <apex:pageblocksection columns="1" >
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Number of Recipients</apex:outputLabel>
+                                        <apex:outputPanel id="selectedRecords" layout="block">
+                                            {{selectedRecords}}
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <!--<apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Select Template Folder</apex:outputLabel>
+                                        <apex:outputLabel >Select Template</apex:outputLabel>
+                                        <apex:outputPanel id="profileOPId2" styleClass="requiredInput" layout="block">
+                                            <select ng-model="selectedFolder" ng-change="changeFolder()">
+                                                <option label="--None--" value=""></option>
+                                                <option ng-repeat="(key,value) in folders" value="{{key}}">{{parseResult(value)}}</option>
+                                            </select>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>-->
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Select Template</apex:outputLabel>
+                                        <apex:outputPanel id="profileOPId" styleClass="requiredInput" layout="block">
+                                            <select ng-model="selectedTemplate" ng-change="changeTemplate()">
+                                                <option label="--None--" value=""></option>
+                                                <option ng-repeat="option in templates" value="{{option.id}}">{{parseResult(option.name)}}</option>
+                                                <!--<option ng-repeat="option in templates" value="{{option.id}}">{{option.name}}</option>-->
+                                            </select>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        
+                                        <apex:outputLabel >Select Object</apex:outputLabel>
+                                        <apex:outputPanel >
+                                            <apex:outputPanel id="profileOPId" styleClass="requiredInput" layout="block" style="display: inline;">
+                                               <!--<select ng-model="selectedObj" ng-change="changeObject()">
+                                                    <option label="--None--" value=""></option>
+                                                    <option ng-repeat="option in objects" value="{{option.name}}">{{option.label}}</option>
+                                                </select>-->
+                                                  
+                                                <select id="selectR" ng-show=" mode == 'Lg' "
+                                                     ng-model="selectedObj" ng-change="changeObject()">
+                                                    <option value="" label="--Select--"></option>
+                                                    <option value="LG_Student__c" label="LG Student"></option> 
+                                                    <option value="Contact" label="Contact"></option> 
+                                                    <option value="LG__c" label="LG"></option>
+                                                </select>
+                                                
+                                                 <select id="selectR" ng-show=" mode == 'Campaign' "
+                                                     ng-model="selectedObj" ng-change="changeObject()">
+                                                    <option value="" label="--Select--"></option>
+                                                    <option value="CampaignMember" label="Campaign Member"></option>
+                                                    <option value="Lead" label="Lead"></option>
+                                                    <option value="Contact" label="Contact"></option> 
+                                                    <option value="Campaign" label="Campaign"></option>
+                                                </select>
+                                                
+                                                <select id="selectR" ng-show=" mode == 'Seminar' "
+                                                     ng-model="selectedObj" ng-change="changeObject()">
+                                                    <option value="" label="--Select--"></option>
+                                                    <option value="Seminar_Teachers__c" label="Teachers Registration to a Seminar"></option>
+                                                    <option value="Contact" label="Contact"></option> 
+                                                    <option value="Seminar__c" label="TTC/Seminar"></option>
+                                                </select>
+                                                 
+                                            </apex:outputPanel>
+                                            <apex:outputLabel styleClass="labelCol">Select Field</apex:outputLabel>
+                                            <apex:outputPanel styleClass="requiredInput" layout="block" style="display: inline;">
+                                                <select ng-model="selectedField" ng-change="changeField()">
+                                                    <option label="--None--" value=""></option>
+                                                    <option ng-repeat="option in fields" value="{{option.name}}">{{option.label}}</option>
+                                                </select>
+                                            </apex:outputPanel>
+                                            <apex:outputLabel styleClass="labelCol">Copy Field</apex:outputLabel>
+                                            <apex:outputPanel style="font-weight:bold;display: inline;">
+                                                {{mergeField}}
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Sender Name</apex:outputLabel>
+                                        <input ng-model="userName"/>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Template Subject</apex:outputLabel>
+                                        <input ng-model="subject" style="width:100%;"/>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel >Template Body</apex:outputLabel>
+                                        <textarea class="ckeditor" id="txtSubject"></textarea>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageblocksection>
+                            </div>
+                        </apex:pageBlock>
+                    </div>
+                    <!-- The Modal -->
+                    <div id="myModal" class="modal" ng-show="isPreview">
+                        <span class="close" ng-click="isPreview = false;">×</span>
+                      <!-- Modal content -->
+                      <div class="modal-content">
+                        
+                        <div id="divPreview"></div>
+                      </div>
+                    
+                    </div>
+                </div>
+                <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                   <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />
+                </div>
+            </form>
+        </body>
+    </html>
+</apex:page>

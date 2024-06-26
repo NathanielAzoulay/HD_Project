@@ -1,0 +1,9 @@
+.center-div {
+    text-align: center;
+    position: relative;
+}
+
+.center-div .slds-button {
+    position: absolute;
+    top: -80px;
+}

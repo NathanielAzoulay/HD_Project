@@ -1,0 +1,110 @@
+<apex:page controller="RSMassEditAll.RSMassEdit"    docType="html-5.0" tabStyle="LG_Student__c" >
+       
+    <apex:form id="form">
+        <div >
+            <apex:pageBlock >
+                <apex:pageMessages />
+                <apex:pageBlock >
+                    Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+                </apex:pageBlock>
+             <apex:pageBlock >  
+              <apex:pageBlockButtons location="bottom">
+                        <apex:commandButton value="search"  action="{!queryFilter}"  status="counterStatus" id="button" rerender="form">
+                            
+                            <apex:actionStatus id="counterStatus"  startText="loading ...... " > 
+                                            <apex:facet name="start" >
+                                              <img src="/img/loading.gif" />                    
+                                            </apex:facet>
+                                        </apex:actionStatus>
+                       </apex:commandButton>
+                    </apex:pageBlockButtons>
+                    
+                    <apex:pageBlockSection title="Filter By Date " >
+                        <apex:pageBlockTable value="{!Datefields.size}" var="f" rendered="{!Datefields.size>0}" >
+                            <apex:column headerValue="Date Field">   
+                                <apex:selectList value="{!fdate}" size="1"  > 
+                                    <apex:selectOptions value="{!Datefields}">                     
+                                    </apex:selectOptions>               
+                                </apex:selectList> 
+                            </apex:column>
+                            <apex:column headerValue="from">
+                                <apex:input value="{!fromdate}" title="from Date" type="datetime-local" />
+                                </apex:column>
+                            <apex:column headerValue="to">    
+                                <apex:input value="{!todate}" title="To Date" type="datetime-local" >
+                                </apex:input>    
+                            </apex:column>   
+                        </apex:pageBlockTable> 
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Filter " >
+                        <apex:pageBlockTable value="{!robj}" var="f"  >
+                            <apex:repeat value="{!$ObjectType.LG_Student__c.FieldSets.FilterMassEdit}" var="field">
+                                <apex:column headerValue="{!field.label}" rendered="{!if ((field.Type='date') || (field.Type='datetime'),false,true)}" >
+                                    <apex:inputField value="{!f[field]}" required="false" >
+                                    </apex:inputField>    
+                                </apex:column>  
+                            </apex:repeat>
+                        </apex:pageBlockTable> 
+                    </apex:pageBlockSection>  
+                </apex:pageBlock> 
+                <apex:pageBlock id="thePageBlock">   
+                    <apex:pageBlockButtons >
+                        <apex:commandButton value="save"  action="{!save}"  >
+                        </apex:commandButton>
+                        <apex:commandButton value="Return"  action="{!rReturn}"  >
+                        </apex:commandButton>
+                       <apex:commandButton value="<<" action="{!beginning}" disabled="{!DisablePrevious}"/>
+                      <apex:commandButton value="<" action="{!previous}" disabled="{!DisablePrevious}"/>
+                      <apex:commandButton value=">" action="{!next}" disabled="{!DisableNext}"/>
+                      <apex:commandButton value=">>" action="{!last}" disabled="{!DisableNext}"/>
+                    </apex:pageBlockButtons>
+                     <br/>
+                <apex:outputPanel rendered="{!DisableNext = false}" >
+                     {!counter+1}-{!counter+limitSize} of {!rSobjectList.size} Records
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!DisableNext}" >
+                     {!counter+1}-{!rSobjectList.size} of {!rSobjectList.size} Records
+                    </apex:outputPanel>
+                    <br/>
+                     <div style="max-height:350px;overflow:auto;">
+                    <apex:pageBlockTable value="{!rSobjectListToShow}" var="a" id="myId" >
+                       
+                        <apex:column headerValue="Name">
+                        <apex:inputField value="{!a['name']}"/>
+                        </apex:column>
+                        <apex:column headerValue="LG Student Code">
+                        <apex:inputField value="{!a['Name']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student">
+                        <apex:outputField value="{!a['Student__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student Price">
+                        <apex:inputField value="{!a['Student_Price__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Lesson Type">
+                        <apex:inputField value="{!a['Lesson_Type__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status in LG">
+                        <apex:inputField value="{!a['Status_in_LG__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student Course Start Date">
+                        <apex:inputField value="{!a['Student_Course_Start_Date__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student Course End Date">
+                        <apex:inputField value="{!a['Student_Course_End_Date__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student Start Paying Date">
+                        <apex:inputField value="{!a['Student_Start_Paying_Date__c']}"/>
+                        </apex:column>
+                        <apex:column headerValue="Student End Paying Date">
+                        <apex:inputField value="{!a['Student_End_Paying_Date__c']}"/>
+                        </apex:column>
+     
+                    </apex:pageBlockTable>
+                    </div>
+                </apex:pageBlock>     
+            </apex:pageBlock>
+        </div>
+    </apex:form>
+    
+</apex:page>

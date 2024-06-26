@@ -1,0 +1,21 @@
+<apex:page standardController="Contact" docType="html-5.0">
+    <apex:includeLightning />
+    <div id="lwcContainer"></div>
+
+    <script>
+      $Lightning.use("c:dedupContactApp", function () {
+        $Lightning.createComponent(
+            "c:dedupeContacts",
+            {
+                //The lwc I"m referencing has an @api to accept a recordId
+                // recordId: '003Pv000005gQKzIAM'   
+            }
+            // },
+            "container",
+            function (cmp) {
+                console.log('component created');
+            }
+        );
+    });
+    </script>
+</apex:page>

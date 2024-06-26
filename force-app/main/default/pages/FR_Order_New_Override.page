@@ -1,0 +1,4 @@
+<apex:page standardController="FR_Order__c" extensions="FR_Order_New_Override_CTRL" action="{!doRedirect}">
+
+    
+</apex:page>

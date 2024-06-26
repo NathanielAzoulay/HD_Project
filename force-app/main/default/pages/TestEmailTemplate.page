@@ -1,0 +1,15 @@
+<apex:page controller="TestEmailTemplateController" action="{!doInit}">
+
+    <apex:outputPanel id="formId"></apex:outputPanel>
+
+    <apex:form >
+        <apex:commandButton value="Save" action="{!doSave}"/>
+    
+         <c:customrtf targetclass="mytextarea" toolbar="EmailMultiFormat"/>
+         <apex:inputTextarea value="{!et2.HtmlValue}"  styleClass="mytextarea" richText="true"/>
+    </apex:form>
+    
+    
+    <apex:iframe frameborder="true" src="/HDC/email/templaterenderer?id=00Xe0000000MGrG&base_href=https%3A%2F%2Fcs15.salesforce.com&preview_frame=previewFrame&render_type=REPLACED_HTML_BODY&setupid=CommunicationTemplatesEmail" scrolling="true" width="400" height="400"/>
+
+</apex:page>

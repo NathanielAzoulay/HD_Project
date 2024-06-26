@@ -1,0 +1,233 @@
+<apex:page standardController="Account" extensions="RsGoalsAchievements" readOnly="true" showChat="false" docType="html-5.0"  >
+    <apex:slds /> 
+    <style>
+        .Actual_StudentsLKG {
+    background-color: #00BFFF;
+    }
+    .Actual_StudentsNonLKG {
+    background-color: #1E90FF;
+    }
+    .Calculated_StudentsLKG {
+    background-color: #32CD32;
+    }
+    .Calculated_StudentsNonLKG {
+    background-color: #2E8B57;
+    }
+    .Actual_Students {
+    background-color: #4682B4;
+    }
+    .Calculated_Students {
+    background-color: #9ACD32;
+    }
+    .Goal {
+    background-color: #FF1493;
+    }
+    .Drop_Out {
+    background-color: #C35817;
+    }
+        .slds [hidden], .slds template {
+        display: block;
+        }
+        .dis{
+        opacity: 0.65; 
+        cursor: not-allowed;
+        }
+        #loading-image {
+        position: fixed;
+        top: 40%;
+        left: 47%;
+        width:4%;
+        } 
+        #loading {
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 1) !important;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        position: fixed;
+        display: block;
+        text-align: center;
+        z-index: 9005;
+        }   
+    </style>
+    
+    <apex:form id="theform">
+        <!-- <apex:outputLink value="/apex/RS_VFP_GOALSAchievement?id={!Account.Id}"  target="_blank" >open in new window
+<vs:importvisualstrap />
+<vs:visualstrapblock >
+</apex:outputLink>-->
+        <!--
+Display table
+<apex:inputCheckbox value="{!displayTable}"  >
+<apex:actionSupport event="onchange"  action="{!displaychart}" rerender="theform"/>
+</apex:inputCheckbox>-->
+        <vs:importvisualstrap />
+        <vs:visualstrapblock >
+            <vs:row > 
+                <vs:column type="col-md-4">
+                    <vs:thumbnail >
+                        Report Type
+                        <Br/>
+                <apex:selectList value="{!rViewOption}" multiselect="false" size="1">
+                    <apex:selectOptions value="{!ViewOption}"/>
+                    <apex:actionSupport event="onchange"  action="{!displaychart}" rerender="theform" status="counterStatus" />
+                    <apex:actionStatus id="counterStatus"  startText="loading ...... "  >      
+                        !--<apex:facet name="start" >
+                        <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                            <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />    
+                        </div> 
+                        </apex:facet>-->
+                        <apex:facet name="start">
+                            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: black;">
+                                &nbsp;
+                            </div>
+                            <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                    <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                    <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                                </div>
+                            </div>
+                        </apex:facet>
+                        
+                    </apex:actionStatus>
+                </apex:selectList>
+                    </vs:thumbnail>
+                </vs:column>   
+                <vs:column type="col-md-4">
+                    <vs:thumbnail >
+                         View as another account
+                        <Br/>
+                        <apex:inputField value="{!ChooseAccount.ParentId}">
+                    <apex:actionSupport event="onchange"   action="{!ClacParam}" rerender="theform" status="counterStatus" />
+                    <apex:actionStatus id="counterStatus"  startText="loading ...... "  >      
+                        !--<apex:facet name="start" >
+                        <div class="slds-spinner--medium" id="loading" ng-if="isloading">
+                            <img ng-show="isloading" id="loading-image" src="{!URLFOR($Resource.LoadingImage)}" alt="Loading..." />    
+                        </div> 
+                        </apex:facet>-->
+                        <apex:facet name="start">
+                            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: black;">
+                                &nbsp;
+                            </div>
+                            <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                                <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                    <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                    <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                                </div>
+                            </div>
+                        </apex:facet>
+                        
+                    </apex:actionStatus>
+                </apex:inputField>
+                    </vs:thumbnail>
+                </vs:column>
+                <vs:column type="col-md-4">
+                    <vs:thumbnail >
+                       
+                Display table
+                        <Br/>
+            <apex:inputCheckbox value="{!displayTable}"  >
+                <apex:actionSupport event="onchange"  rerender="theform" status="counterStatus1" action="{!displaychart}" />
+                <apex:actionStatus id="counterStatus1"  startText="loading ...... "  >      
+                    
+                    <apex:facet name="start">
+                        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: black;">
+                            &nbsp;
+                        </div>
+                        <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 50%">
+                            <div style="display: inline-block; padding: 2px; background-color: #fff; width: 125px;">
+                                <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                                <span style="display: inline-block; padding: 10px 0px;">Please Wait...</span>
+                            </div>
+                        </div>
+                    </apex:facet>
+                    
+                </apex:actionStatus>
+            </apex:inputCheckbox> 
+                    </vs:thumbnail>
+                </vs:column>
+            </vs:row>
+            <vs:panel title="Goals And Achievement Chart" type="default" > 
+               
+                
+                <br/>    
+                <br/> 
+                <br/> 
+                <center>
+                    <div class="slds">    
+                        <div class="slds-grid">
+                            <div class="slds-col--padded">   
+                                
+                                <apex:chart data="{!IF (rViewOption='CalendarYear',GAChart,GAScoolYearChart)}" height="350" width="900"  resizable="true"  legend="false"  id="Chart1"> 
+                                    <apex:legend position="right" spacing="1"  /> 
+                                    
+                                    <apex:axis type="Numeric" position="left" grid="true"  title="Number Of Students" 
+                                               fields="Goal,Actual_Students,Actual_StudentsLKG,Actual_StudentsNonLKG,Calculated_Students,Calculated_StudentsLKG,Calculated_StudentsNonLKG" dashSize="2" > 
+                                    </apex:axis>
+                                    
+                                    <apex:axis type="Category" position="bottom" fields="ryear" title="Year">
+                                        <apex:chartLabel rotate="325" />
+                                    </apex:axis>
+                                    
+                                    <apex:barSeries orientation="vertical"  axis="left" stacked="false" xField="ryear"
+                                                    yField="Actual_StudentsLKG,Actual_StudentsNonLKG,Calculated_StudentsLKG,Calculated_StudentsNonLKG,Drop_Out"
+                                                    title="Actual Students LKG,Actual Students Non LKG,Calculated LKG Students,Calculated Students (Non LKG),Drop Out"
+                                                    colorSet="#00BFFF,#1E90FF,#32CD32,#2E8B57,#C35817"
+                                                    >
+                                        <apex:chartTips height="50" width="120" />
+                                    </apex:barSeries> 
+                                    
+                                    
+                                    <apex:lineSeries axis="left" xField="ryear" yField="Actual_Students" 
+                                                     fillColor="none" strokeWidth="2" tips="true" strokeColor="#4682B4" title="Totals Actual Students"
+                                                     fill="true" markerType="circle" markerSize="4" markerFill="#4682B4"> 
+                                        <apex:chartTips height="50" width="120" />
+                                    </apex:lineSeries>
+                                    <apex:lineSeries axis="left" xField="ryear" yField="Calculated_Students" 
+                                                     fillColor="none" strokeWidth="2" tips="true" strokeColor="#9ACD32"   title="Totals Calculated Students"
+                                                     fill="true" markerType="circle" markerSize="4" markerFill="#9ACD32"
+                                                     >
+                                        <apex:chartTips height="50" width="120" />
+                                    </apex:lineSeries>
+                                    <apex:lineSeries axis="left" xField="ryear" yField="Goal" fillColor="none" strokeWidth="2" tips="true" strokeColor="#FF1493"
+                                                     fill="true" markerType="circle" markerSize="4" markerFill="#FF1493" title="Goals" > 
+                                        
+                                        <apex:chartTips height="50" width="120" />
+                                    </apex:lineSeries>
+                                    
+                                </apex:chart>  
+                            </div>
+                        </div>                
+                    </div> 
+                </center>
+            </vs:panel> 
+            <br/>
+            <vs:panel title="Goals And Achievement Table" type="default" rendered="{!displayTable}">
+            
+            <apex:outputPanel id="table" rendered="{!displayTable}" styleClass="table table-condensed">
+                
+                <apex:dataTable value="{!IF (rViewOption='CalendarYear',GAChart,GAScoolYearChart)}" var="a"  >
+                    <apex:column value="{!a.ryear}"  headerValue="Year" />
+                    <apex:column value="{!a.Actual_StudentsLKG}" headerValue="Actual Students (LKG)" styleClass="Actual_StudentsLKG"/>
+                    <apex:column value="{!a.Actual_StudentsNonLKG}" headerValue="Actual Students (Non LKG)" styleClass="Actual_StudentsNonLKG"/>
+                    <apex:column value="{!a.Actual_Students}" headerValue="Total Actual Students" styleClass="Actual_Students"/>
+                    <apex:column value="{!a.Calculated_StudentsLKG}" headerValue="Calculated Students (LKG)" styleClass="Calculated_StudentsLKG"/>
+                    <apex:column value="{!a.Calculated_StudentsNonLKG}" headerValue="Calculated Students (Non LKG)" styleClass="Calculated_StudentsNonLKG" />
+                    <apex:column value="{!a.Calculated_Students}" headerValue="Total Calculated Students " styleClass="Calculated_Students" />
+                    <apex:column value="{!a.Goal}" headerValue="Goal" styleClass="Goal" />
+                    <apex:column value="{!a.Drop_Out}" headerValue="Drop Out" styleClass="Drop_Out"/>
+                </apex:dataTable>
+            </apex:outputPanel>
+                <Br/>
+              <apex:commandButton value="Export to Excel" styleClass="btn-default" action="{!exportToExcel}"/>
+            </vs:panel>
+            <br/>
+            
+        </vs:visualstrapblock>
+        
+        
+    </apex:form>  
+    
+</apex:page>

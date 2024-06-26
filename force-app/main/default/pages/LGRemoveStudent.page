@@ -1,0 +1,154 @@
+<apex:page showHeader="false" sidebar="false" controller="LGRemoveStudentController">
+  <apex:outputPanel id="jsPanel">
+    <script>
+
+      var j$ = parent.j$;
+      var result;
+      if('{!resultJSON}' != ''){      
+        result = JSON.parse('{!resultJSON}');
+      }
+
+      if({!Step} == 1){
+        parent.resizeModalJS('450','250');
+
+        if(result != '' && result.Result == 'fail'){
+          parent.resizeModalJS('450','350');
+        }
+ 
+      }
+
+      if({!Step} == 2){
+        parent.resizeModalJS('450','300'); 
+
+        if(result != '' && result.Result == 'fail'){
+          parent.resizeModalJS('450','350');
+        }
+      }
+
+      if(result != '' && result.Result == 'success'){
+          parent.cancelRemoveStudentPostBackJS();
+      }
+
+      function closeModal(){
+          //parent.cancelRemoveStudentPostBackJS('{!JSENCODE(studentId)}'); 
+           parent.cancelRemoveStudentPostBackJS(); 
+      }
+    </script>  
+  </apex:outputPanel> 
+
+  <style>
+  		.data2Col {
+    		text-align: center !important;        
+  		}
+      .changeLGForm .data2Col .dateInput {
+        float: left;
+      }
+
+      .bPageBlock .detailList .labelCol {
+        width: 46%;
+      }
+
+      .changeLGForm .data2Col .requiredInput{
+        width: 120px;
+      }
+
+      .changeLGForm .data2Col .requiredInput .lookupInput input{
+        width: 135px;
+      }
+
+      .removeLGForm .detailList .labelCol {
+        width: 45%;
+      }
+
+      .dropoutResonPick select{
+        width: 140px;
+      }
+  </style> 
+
+  <apex:form >    
+      
+      <apex:pageMessages id="msgs" />
+
+      <apex:pageBlock id="pbContainer" mode="edit">
+
+        <apex:pageBlockButtons location="bottom">
+          <apex:actionStatus id="ButtonStatus">
+            <apex:facet name="stop">
+               <apex:outputPanel >
+                  <apex:commandButton rerender="pbContainer,msgs,jsPanel" status="ButtonStatus" value="Change Group" action="{!doChange}" rendered="{!formNro == 1}"/>
+                  <apex:commandButton rerender="pbContainer,msgs,jsPanel" status="ButtonStatus" value="Remove From Group" action="{!doRemove}" rendered="{!formNro == 2}"/>
+               </apex:outputPanel>
+            </apex:facet>
+            <apex:facet name="start">
+               <apex:outputPanel >
+                  <apex:commandButton value="Processing..." disabled="true"/>
+               </apex:outputPanel>
+            </apex:facet>
+          </apex:actionStatus>    
+        </apex:pageBlockButtons>
+
+        <!-- first form showed with the options to remove student -->
+        <apex:outputPanel rendered="{!formNro == 0}"> 
+         <apex:pageBlockSection columns="1" collapsible="false">
+         	<apex:commandLink value="Change to different Learning Group" action="{!ChangeForm}" rerender="pbContainer,msgs,jsPanel">
+            <apex:param name="step" value="1" assignTo="{!stepParam}"/>
+          </apex:commandLink>
+         	<apex:commandLink value="Removed from Learning Group" action="{!ChangeForm}">
+            <apex:param name="step" value="2" assignTo="{!stepParam}"/>
+          </apex:commandLink>
+         	<apex:outputLink onclick="closeModal();">Cancel</apex:outputLink>
+         </apex:pageBlockSection> 
+        </apex:outputPanel>
+
+        <!-- form for Change to different Learning Group -->
+        <apex:outputPanel rendered="{!formNro == 1}" styleClass="changeLGForm">
+
+          <apex:pageBlockSection columns="1" collapsible="false">
+            <p>Change LG to Student {!currentStudent.First_Name__c} {! currentStudent.Last_Name__c} from learning group {! currentStudent.LG__r.Name}</p>            
+            <br />
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Enter End Date to current Learning Group:</apex:outputLabel>
+              <apex:inputField value="{!dummyStudent.Student_Course_End_Date__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Choose new Learning Group:</apex:outputLabel>
+              <apex:inputField value="{!dummyStudent.LG__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+
+        </apex:outputPanel>
+
+        <!-- form for Removed from Learning Group -->
+        <apex:outputPanel rendered="{!formNro == 2}" styleClass="removeLGForm">
+
+          <apex:pageBlockSection columns="1" collapsible="false">
+            <p>Change LG to Student {!currentStudent.First_Name__c} {! currentStudent.Last_Name__c} from learning group {! currentStudent.LG__r.Name}</p>            
+            <br />
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Enter End Date to current Learning Group:</apex:outputLabel>
+              <apex:inputField value="{!dummyStudent.Student_Course_End_Date__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Enter End Paying Date:</apex:outputLabel>
+              <apex:inputField value="{!dummyStudent.Student_End_Paying_Date__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+              <apex:inputField style="display:none;" value="{!dummyStudent.Remove_Reason__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>  
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Enter Reason for Dropout:</apex:outputLabel>
+              <apex:outputPanel styleClass="dropoutResonPick">
+                <apex:inputField value="{!dummyStudent.Drop_Out_Reason__c}"></apex:inputField>
+              </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel >Comment:</apex:outputLabel>
+              <apex:inputField value="{!dummyStudent.Status_in_LG_Comment__c}"></apex:inputField>
+            </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+
+        </apex:outputPanel>
+      
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

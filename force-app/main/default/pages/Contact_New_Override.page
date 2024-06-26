@@ -1,0 +1,2 @@
+<apex:page standardController="Contact" extensions="Contact_New_Override_CTRL" action="{!doRedirect}" >
+</apex:page>

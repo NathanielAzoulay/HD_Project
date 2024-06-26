@@ -1,0 +1,50 @@
+<apex:page standardController="LG_Lesson__c" recordSetVar="unused" sidebar="false">
+<apex:includeScript value="{!$Resource.UtilJS}" />
+<apex:form >
+<apex:pageBlock >
+<apex:pageMessages />
+<apex:pageBlock >
+Note: All modifications made on the page will be lost if Return button is clicked without clicking the Save button first. 
+</apex:pageBlock>
+<apex:pageBlockButtons >
+<apex:commandButton value="Save" action="{!save}"/>
+<apex:commandButton value="Return" action="{!cancel}"/>
+</apex:pageBlockButtons>
+<apex:pageBlockTable value="{!selected}" var="a" id="table">
+<apex:column headerValue="LG Lesson Code">
+<apex:inputField value="{!a.Name}"/>
+</apex:column>
+<apex:column headerValue="LG">
+<apex:outputField value="{!a.LG__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Type">
+<apex:inputField value="{!a.Lesson_Type__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Status">
+<apex:inputField value="{!a.Lesson_Status__c}"/>
+</apex:column>
+<apex:column headerValue="Reason for Cancelation">
+<apex:inputField value="{!a.Reason_for_Cancelation__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson">
+<apex:inputField value="{!a.Lesson__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Subject">
+<apex:inputField value="{!a.Lesson_Subject__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Remarks">
+<apex:inputField value="{!a.Lesson_Remarks__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Date/Hour">
+<apex:inputField value="{!a.Lesson_Date_Hour__c}"/>
+</apex:column>
+<apex:column headerValue="Day">
+<apex:inputField value="{!a.Day__c}"/>
+</apex:column>
+<apex:column headerValue="Lesson Teacher">
+<apex:inputField value="{!a.Lesson_Teacher__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

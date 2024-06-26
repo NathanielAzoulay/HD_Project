@@ -1,0 +1,75 @@
+<apex:page standardController="LG__c" recordSetvar="lgs" extensions="LGZeroPaymentsController">
+    
+    <style>
+        #content { 
+          overflow:auto; 
+          width: 600px; 
+        } 
+        
+        #left, #right { 
+          width: 40%; 
+          margin:5px; 
+          padding: 1em; 
+        } 
+        
+        #left  { float:left;  }
+        #right { float:right; } 
+    </style>
+    
+    <apex:outputPanel id="showSuccessMessagePanel">
+    
+        <script>
+            if('{!NOT(ISBLANK(showSuccessMessage))}'=='true'){
+                alert('{!showSuccessMessage}');
+                document.location.href = '{!retURL}';
+            }    
+        </script>    
+
+    
+    </apex:outputPanel>
+    
+    <apex:form id="theForm">
+        
+                
+        <apex:pageMessages id="showmsg"></apex:pageMessages>
+        
+        <apex:commandButton rendered="{!NOT(showCreateButton)}" action="{!cancel}" value="Back"/>
+        <apex:pageblock rendered="{!showCreateButton}" title="Create Zero Monthly Payment">
+            <div id="content">
+                <div id="left">
+                    <b>Months:</b>
+                    <br/>
+                    <apex:repeat value="{!allMonths}" var="m">
+                        <apex:inputCheckbox value="{!m.isSelected}"/>
+                        <apex:outputLabel value="{!m.month}"/>
+                        <br/>
+                    </apex:repeat>
+                </div>
+                <div id="right">
+                    <b>Year:</b>
+                    <br/>
+                    <div style="display:none;">
+                        <apex:inputField value="{!dummySpecialPrice.Discount_Type__c}"/>
+                    </div>    
+                    <apex:inputField value="{!dummySpecialPrice.Year__c}"/>
+                </div>
+            </div>    
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton action="{!cancel}" value="Cancel"/>
+                <apex:commandButton reRender="theForm,showSuccessMessagePanel" status="progressStatus" action="{!doCreateLGSpecialPriceToLGs}" value="Create Payments" rendered="{!showCreateButton}"/>
+                <apex:actionStatus id="progressStatus">
+                    <apex:facet name="start">
+                        <apex:outputPanel layout="inline"> 
+                            <img height="16" width="16" src="/img/loading.gif" />
+                        </apex:outputPanel>
+                    </apex:facet>
+                    <apex:facet name="stop" >
+                    </apex:facet>
+                </apex:actionStatus>
+            </apex:pageBlockButtons>
+            
+        </apex:pageblock>
+        
+    </apex:form> 
+    
+</apex:page>

@@ -1,0 +1,97 @@
+<apex:page controller="RS_VFC_TeachersTraining" readOnly="true" showChat="false" showHeader="false" >
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+     <apex:slds /> 
+    <table class="slds-table slds-table_bordered slds-table_cell-buffer  slds-table_striped slds-no-row-hover" role="grid">
+       <thead>
+           <tr class="slds-line-height_reset">
+                        <th class="slds-is-sortable slds-is-resizable slds-text-title_caps" scope="col">
+                   <a href="javascript:void(0);" class="slds-th__action slds-text-link_reset" tabindex="0">
+                       <span class="slds-assistive-text">Sort </span>
+                       <span class="slds-truncate" title="Start Date">Start Date</span>
+                       <div class="slds-icon_container">
+                           <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#arrowdown"></use>
+                           </svg>
+                       </div>
+                       <span class="slds-assistive-text" aria-live="assertive" aria-atomic="true"></span>
+                   </a>
+                   <div class="slds-resizable">
+                       <label for="cell-resize-handle-2" class="slds-assistive-text">Start Date </label>
+                       <input type="range" min="20" max="1000" class="slds-resizable__input slds-assistive-text" id="cell-resize-handle-2" tabindex="0"/>
+                       <span class="slds-resizable__handle">
+                           <span class="slds-resizable__divider"></span>
+                       </span>
+                   </div>
+               </th>    
+               <th class="slds-is-sortable slds-is-resizable slds-text-title_caps" scope="col">
+                   <a href="javascript:void(0);" class="slds-th__action slds-text-link_reset" tabindex="0">
+                       <span class="slds-assistive-text">Sort </span>
+                       <span class="slds-truncate" title="Location">Location</span>
+                       <div class="slds-icon_container">
+                           <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#arrowdown"></use>
+                           </svg>
+                       </div>
+                       <span class="slds-assistive-text" aria-live="assertive" aria-atomic="true"></span>
+                   </a>
+                   <div class="slds-resizable">
+                       <label for="cell-resize-handle-2" class="slds-assistive-text">Account Name column width</label>
+                       <input type="range" min="20" max="1000" class="slds-resizable__input slds-assistive-text" id="cell-resize-handle-2" tabindex="0"/>
+                       <span class="slds-resizable__handle">
+                           <span class="slds-resizable__divider"></span>
+                       </span>
+                   </div>
+               </th>    
+               <th class="slds-is-sortable slds-is-resizable slds-text-title_caps" scope="col">
+                   <a href="javascript:void(0);" class="slds-th__action slds-text-link_reset" tabindex="0">
+                       <span class="slds-assistive-text">Sort </span>
+                       <span class="slds-truncate" title="Country">Country</span>
+                       <div class="slds-icon_container">
+                           <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#arrowdown"></use>
+                           </svg>
+                       </div>
+                       <span class="slds-assistive-text" aria-live="assertive" aria-atomic="true"></span>
+                   </a>
+                   <div class="slds-resizable">
+                       <label for="cell-resize-handle-2" class="slds-assistive-text">Country</label>
+                       <input type="range" min="20" max="1000" class="slds-resizable__input slds-assistive-text" id="cell-resize-handle-2" tabindex="0"/>
+                       <span class="slds-resizable__handle">
+                           <span class="slds-resizable__divider"></span>
+                       </span>
+                   </div>
+               </th>    
+         </tr>
+       </thead>       
+        <tbody>
+            <apex:repeat value="{!Seminars}" var="SM">
+                <tr class="slds-hint-parent">
+                    <th scope="row" data-label="{!SM.Start_Date__c}">
+                        <div class="slds-truncate" title="{!SM.Start_Date__c}">
+                            <apex:outputText value="{0,date,dd/MM/yyyy}" >
+                                <apex:param value="{!SM.Start_Date__c}"/>
+                            </apex:outputText>    
+                        </div>
+                        
+                    </th>
+                    <th scope="row" data-label="{!SM.Venue_City__c}">
+                        <div class="slds-truncate" title="{!SM.Venue_City__c}">
+                            <apex:outputText value="{!SM.Venue_City__c}" >
+                            </apex:outputText>    
+                        </div>
+                        
+                    </th>
+                    <th scope="row" data-label="{!SM.Country__c}">
+                        <div class="slds-truncate" title="{!SM.Country__c}">
+                            <apex:outputText value="{!SM.Country__c}" >
+                            </apex:outputText>    
+                        </div>
+                        
+                    </th>
+                </tr> 
+            </apex:repeat>
+        </tbody>
+    
+    </table>
+        </html>
+</apex:page>

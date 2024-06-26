@@ -1,0 +1,9 @@
+<apex:page standardController="Business_Call__c">
+  <apex:form >
+    <apex:pageBlock title="My Content" mode="edit">
+      <apex:pageBlockButtons >
+        <apex:commandButton action="{!quicksave}" value="Quick Save"/>
+      </apex:pageBlockButtons>
+     </apex:pageBlock>
+  </apex:form>
+</apex:page>

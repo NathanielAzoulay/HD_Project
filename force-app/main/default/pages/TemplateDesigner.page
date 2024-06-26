@@ -1,0 +1,512 @@
+<apex:page standardController="Email_Template__c" extensions="TemplateDesignerController" sidebar="false">
+    <!-- Scripts --->
+    <apex:includeScript value="{!URLFOR($Resource.Resources,'/Scripts/jquery.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.Resources,'/Scripts/jquery-ui.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.CKEditor,'/ckeditor/ckeditor.js')}"/>
+    
+    <!-- CSS --->
+    <apex:stylesheet value="{!URLFOR($Resource.Resources,'/CSS/jquery-ui.theme.css')}"/>
+    
+    <script>
+        var isConditional = false;
+        $(document).ready(function() {
+            
+            $('#dialog-insertField').dialog({
+                autoOpen: false,
+                width: 1000,
+                modal: true,
+                buttons: [
+                    {
+                      text: "Add",
+                      click: function() {
+                          var objEditor = CKEDITOR.instances['{!$Component.frm.msgpost}'];
+                          document.getElementById('{!$Component.frm.msgpost}').value = objEditor.getData();
+                          var field = $('.mfield').html();
+                          
+                          if(!isConditional && field != undefined){
+                              objEditor.insertText(' '+field+' ');
+                          }
+                          else if(field != undefined){
+                              var field = field;
+                              field = field.replace('{'+'!','');
+                              field = field.replace('}','');
+                              
+                              var Choice = $('.ConditionChoice').val();
+                              console.log('=== choice == '+Choice);
+                              if(Choice == 'true'){
+                                  objEditor.insertText('<div style="display:'+'{'+'!IF('+field+',\'block\',\'none\')}"> Place your content here. </div>');
+                              }
+                              else{
+                                  objEditor.insertText('<div style="display:'+'{'+'!IF('+field+',\'none\',\'block\')}"> Place your content here. </div> ');
+                              }
+                          }
+                          $(this).dialog( "close" );
+                      }
+                    }
+                  ]
+            });
+        
+            $('#dialog-relatedlist').dialog({
+                autoOpen: false,
+                width: 824,
+                modal: true,
+                buttons: [
+                    {
+                      text: "Add",
+                      click: function() {
+                          //$(this).dialog("close");
+                          PrepareJSON();
+                      }
+                    }
+                  ]
+            });
+        
+            $('#btn-insertField').click(function() {
+               var objName = $('.selectedObject').val();
+               isConditional = false;
+               refreshInsertField(objName,false);
+               return false;
+            });
+            /*$('#btn-condition').click(function() {
+                var objName = $('.selectedObject').val();
+                isConditional = true;
+                refreshInsertField(objName,true);
+                return false;
+            });*/
+            /*$('#btn-relatedList').click(function() {
+                var objName = $('.selectedObject').val();
+                if(objName != null && objName != ''){
+                   refreshRelatedList(objName);
+               }
+               else{
+                 alert('Please select parent object first.');
+                }
+                return false;
+            });*/
+        });
+        
+        function loading(val) {
+            if(val) {
+                document.getElementById('contentLoading').style.display = 'inline-block';
+            }
+            else{
+                document.getElementById('contentLoading').style.display = 'none';
+            }
+        }
+        
+        function openPopup(val){
+            if(val == 'p1'){
+                if(!isConditional){
+                    $('#dialog-insertField').dialog("option", "title", "Insert field");
+                    $('.condition').css("display", "none");
+                }
+                else{
+                    $('#dialog-insertField').dialog("option", "title", "Condition");
+                    $('.condition').css("display", "table-cell");
+                }
+                $('#dialog-insertField').dialog('open');
+            }
+            else if(val == 'p2'){
+                $('#dialog-relatedlist').dialog('open');
+            }
+        }
+        
+        function selectField(fieldname) {
+            var objName = $('.selectedObject').val();
+            createMergeField(objName, fieldname,'');
+        }
+        function refselectField(fieldname) {
+            var objName = $('.selectedObject').val();
+            var objName2 = $('.selectedField').val();
+            //alert(objName+'    '+objName2);
+            createMergeField(objName,objName2, fieldname);
+        }
+        function clickSelect(){
+            var selectedValues = '';
+            $('.availableValues :selected').each(function(i, selected){
+                if(selectedValues != ''){
+                    selectedValues += '#@#';
+                }
+                selectedValues += $(selected).text();
+            });
+            
+            if(selectedValues != ''){
+                jsclickSelect(selectedValues);
+            }
+        }
+        function clickunselect(){
+            var selectedValues = '';
+            $('.selectedValues :selected').each(function(i, selected){
+                if(selectedValues != ''){
+                    selectedValues += '#@#';
+                }
+                selectedValues += $(selected).text();
+            });
+            
+            if(selectedValues != ''){
+                jsclickunselect(selectedValues);
+            }
+        }
+        function moveUpward(){
+            var selectedValues = '';
+            $('.selectedValues :selected').each(function(i, selected){
+                if(selectedValues != ''){
+                    selectedValues += '#@#';
+                }
+                selectedValues += $(selected).text();
+            });
+            if(selectedValues != ''){
+                jsmoveUpward(selectedValues);
+            }
+        }
+        
+        function moveDownward(){
+            var selectedValues = '';
+            $('.selectedValues :selected').each(function(i, selected){
+                if(selectedValues != ''){
+                    selectedValues += '#@#';
+                }
+                selectedValues += $(selected).text();
+            });
+            if(selectedValues != ''){
+                jsmoveDownward(selectedValues);
+            }
+        }
+        
+        function PrepareJSON(){
+            var selChild = $('.selectedChild').val();
+            
+            if(selChild != undefined && selChild != ''){
+                //display:none;
+                var JSONBody = '<div style="display:none;">{"relatedList": {\n';
+                var TBody = '<table border="1" style="border-collapse:collapse;"><tr>';
+                
+                JSONBody += '"ObjectName": "'+selChild+'",\n';
+                JSONBody += '"tableSchema": {\n';
+                JSONBody += '"columns": [\n';
+                
+                var columns = '';
+                $(".selectedValues option").each(function(){
+                    if(columns != ''){
+                        columns +=',';
+                    }
+                    columns += '{\n';
+                    columns += '"name": "'+$(this).val()+'"\n';
+                    columns += '}\n';
+                    
+                    TBody += '<th>'+$(this).text()+'</th>';
+                });
+                                
+                JSONBody += columns+']\n';
+                JSONBody += '},\n';
+                JSONBody += '"sortorder": "'+$('.selectedOrder').val()+'",\n';
+                JSONBody += '"filter": "'+$('.selectedFilter').val()+'"\n';
+                JSONBody += '}\n';
+                JSONBody += '}\n</div>';
+                
+                var objEditor = CKEDITOR.instances['{!$Component.frm.msgpost}'];
+                document.getElementById('{!$Component.frm.msgpost}').value = objEditor.getData();
+                
+                
+                TBody += '</tr></table>';
+                //objEditor.insertHtml(TBody);
+                objEditor.insertHtml('<div>'+JSONBody+TBody+'</div>');
+                $('#dialog-relatedlist').dialog("close");
+            }
+            else{
+                alert('Please select related object and fields.');
+            }
+        }
+    </script>
+    
+    <apex:form id="frm">
+        <style>
+            
+            #contentLoading{
+                width: 100%;
+                height: 100%;
+                top: 0px;
+                left: 0px;
+                position: fixed;
+                display: block;
+                opacity: 0.6;
+                background-color: #fff;
+                z-index: 10001;
+                text-align: center;
+            }
+            
+            #contentLoading1{
+                position: relative;
+                top:300px;
+                z-index: 10000;
+            }
+            
+            .btn-cls{
+                width: 100px;
+                height:30px;
+            }
+            .outerDiv {
+                border: 1px solid #919191;
+                background-color: #fff;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            .innerDiv {
+                white-space: nowrap;
+                overflow-x: auto;
+                height: 100%;
+            }
+            .header{
+                height: 65px;
+                margin-top: 20px;
+            }
+        </style>
+        <apex:pageMessages id="msg"/>
+        <apex:actionStatus id="loading" onstart="loading(true)" onstop="loading(false)"/>
+        <!-- Action Functions -->
+        <apex:actionFunction name="createMergeField" status="loading" action="{!createMergeField}" reRender="opMergeField,msg,refsobjectFields,choice">
+            <apex:param name="p1" value="" assignTo="{!selectedObject}"/>
+            <apex:param name="p2" value="" assignTo="{!selectedField}"/>
+            <apex:param name="p3" value="" assignTo="{!refselectedField}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="update" status="loading" action="{!createMergeField}" rerender="jsvalues,msgs"/>
+        <apex:actionFunction name="update2" status="loading" action="{!createMergeField2}" rerender="jsvalues2,msg"/>
+        
+        <apex:actionFunction name="refreshInsertField" status="loading" action="{!InitializeInsertFields}" reRender="insertField" oncomplete="openPopup('p1');">
+            <apex:param name="p1" value="" assignTo="{!selectedObject}"/>
+            <apex:param name="p3" value="" assignTo="{!isConditional}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="refreshRelatedList" status="loading" action="{!InitializeRelatedFields}" reRender="relatedObjects" oncomplete="openPopup('p2');">
+            <apex:param name="parm1" value="" assignTo="{!selectedObject}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="fetchSobjectFields" action="{!fetchsobjectFields}" status="loading" reRender="sobjectFields,msg">
+            <apex:param name="parm2" value="" assignTo="{!selectedObject}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="fetchChildSobjectFields" action="{!RObjectFields}" status="loading" reRender="pgrid,msg">
+            <apex:param name="parm3" value="" assignTo="{!relatedObject}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="jsclickSelect" action="{!selectclick}" status="loading" oncomplete="return false;" reRender="pgrid">
+            <apex:param name="parm4" value="" assignTo="{!leftselected}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="jsclickunselect" action="{!unselectclick}" status="loading" oncomplete="return false;" reRender="pgrid">
+            <apex:param name="parm5" value="" assignTo="{!rightselected}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="jsmoveUpward" action="{!moveUpward}" status="loading" oncomplete="return false;" reRender="pgrid">
+            <apex:param name="parm6" value="" assignTo="{!rightselected}"/>
+        </apex:actionFunction>
+        <apex:actionFunction name="jsmoveDownward" action="{!moveDownward}" status="loading" oncomplete="return false;" reRender="pgrid">
+            <apex:param name="parm7" value="" assignTo="{!rightselected}"/>
+        </apex:actionFunction>
+        
+        <!-- Action Function End -->
+        
+        <!-- Insert Field Popup -->
+        <div id="dialog-insertField" title="Insert field" style="display:none;">
+            <apex:outputPanel id="insertField">
+                <div style="width: 950px; display: block; visibility: visible;">
+                    <p>Select a field, then click Insert. Labels followed by a "&gt;" indicate that there are more fields available.</p>
+                    <div class="outerDiv" style="height: 193px;">
+                        <div class="innerDiv">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <apex:selectList size="9" style="overflow: auto;min-width:100px" styleClass="selectedObject" id="selectedObject" value="{!selectedObject}" onchange="fetchSobjectFields(this.value);">
+                                                <apex:selectOptions value="{!ObjectNames}"/>
+                                            </apex:selectList>
+                                        </td>
+                                        <td>
+                                            <apex:outputPanel id="sobjectFields">
+                                                <apex:outputPanel layout="block" style="width:250px" rendered="{!AND(ObjectFields != null, ObjectFields.size > 0)}">
+                                                    <apex:selectList size="9" style="width:250px" value="{!selectedField}" styleClass="selectedField" onchange="selectField(this.value);">
+                                                        <apex:selectOptions value="{!ObjectFields}"/>
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                            </apex:outputPanel>
+                                        </td>
+                                        <td>
+                                            <apex:outputPanel id="refsobjectFields">
+                                                <apex:outputPanel layout="block" style="width:250px"  rendered="{!AND(refObjectFields != null, refObjectFields.size > 0)}">
+                                                    <apex:selectList size="9" style="width:250px" value="{!refselectedField}" onchange="refselectField(this.value);">
+                                                        <apex:selectOptions value="{!refObjectFields}"/>
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                            </apex:outputPanel>
+                                        </td>
+                                        <td>
+                                            <apex:outputPanel id="opMergeField">
+                                                <apex:outputPanel rendered="{!mergeField != ''}" layout="block" style="background-color: #fafafa;padding-left: 5px;padding-right: 5px;border: 1px solid #aaa;text-align: center;height: 153px;">
+                                                    <div style="margin-top: 50px;">You have selected:</div>
+                                                    <div style="font-weight: bold;" class="mfield">{!mergeField}</div>
+                                                </apex:outputPanel>
+                                            </apex:outputPanel>
+                                        </td>
+                                        <td class="condition">
+                                            <apex:outputPanel id="choice">
+                                                <apex:outputPanel rendered="{!mergeField != ''}" layout="block" style="background-color: #fafafa;padding-left: 5px;padding-right: 5px;border: 1px solid #aaa;text-align: center;height: 153px;">
+                                                    <div style="margin-top: 50px;">
+                                                        display when selected field value is:<br/>
+                                                        <apex:selectList value="{!conditionChoice}" size="1" style="width: 65px;" styleClass="ConditionChoice">
+                                                            <apex:selectOption itemLabel="True" itemValue="true"></apex:selectOption>
+                                                            <apex:selectOption itemLabel="False" itemValue="false"></apex:selectOption>
+                                                        </apex:selectList>
+                                                    </div>
+                                                </apex:outputPanel>
+                                            </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+        </div>
+        <!-- Insert Field Popup End -->
+        
+        <!-- Related List Popup -->
+        <div id="dialog-relatedlist" title="Insert Related List" style="display:none;">
+            <apex:outputPanel id="relatedObjects">
+                <table style="width:100%;border-collapse: collapse;">
+                    <tbody>
+                        <tr>
+                            <td style="width:50%;">
+                                <table style="height:175px;">
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: bold;color: #4a4a56;width: 40%;">
+                                            Select Related List</div>
+                                            
+                                            <div style="float: left;">
+                                                <apex:actionRegion >
+                                                    <apex:selectList value="{!RelatedObject}" style="width: 235px;" styleClass="selectedChild" size="1" onchange="fetchChildSobjectFields(this.value);">
+                                                        <apex:selectOptions value="{!AllRelatedObjects}"/>
+                                                    </apex:selectList>
+                                                </apex:actionRegion>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr><td style="width:50%;">
+                                        <div style="font-weight: bold;color: #4a4a56;width: 30%;">Sort Order</div>
+                                        <div style="float: left;"><apex:inputText style="width: 232px;" styleClass="selectedOrder"/></div></td>
+                                    </tr>
+                                    <tr><td style="width:50%;">
+                                        <div style="font-weight: bold;color: #4a4a56;width: 30%;">Filter</div>
+                                        <div style="float: left;"><apex:inputText style="width: 232px;" styleClass="selectedFilter"/></div></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="width:50%;">
+                                <apex:outputPanel id="pgrid">
+                                    <apex:outputText style="color: red;" value="{!fieldLimitAlert}" rendered="{!fieldLimitAlert != ''}"></apex:outputText>
+                                    <apex:panelGrid columns="4" id="pgrid33">
+                                        <apex:panelGroup style="margin-left: -2px;">
+                                            Available Fields
+                                            <apex:selectList id="sel1" styleClass="availableValues" value="{!leftselected}" multiselect="true" size="5" style="overflow: auto;min-width: 171px;max-width:171px; height: 135px;">
+                                                <apex:selectOptions value="{!unSelectedValues}" />
+                                            </apex:selectList>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup >
+                                            <a onclick="clickSelect();return false;">
+                                                <img src="/s.gif" alt="Add" class="picklistArrowRight" id="right_arrow" style="cursor:pointer;" title="Add"/>
+                                            </a>
+                                            <br/>
+                                            <a onclick="clickunselect();return false;">
+                                                <img src="/s.gif" alt="Remove" class="picklistArrowLeft" id="left_arrow" style="cursor:pointer;background-position: left -60px;" title="Remove"/>
+                                            </a>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup >
+                                            Selected Fields
+                                            <apex:selectList id="sel2" styleClass="selectedValues" value="{!rightselected}" multiselect="true" size="5" style="overflow: auto;min-width: 171px;max-width:171px; height: 135px;">
+                                                <apex:selectOptions value="{!SelectedValues}" />
+                                            </apex:selectList>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup >
+                                            <a onclick="moveUpward();return false;">
+                                                <img src="/s.gif" alt="Up" class="upArrowIcon" id="" style="cursor:pointer;" title="Add"/>
+                                            </a>
+                                            <br/>
+                                            <a onclick="moveDownward();return false;">
+                                                <img src="/s.gif" alt="Down" class="downArrowIcon" id="" style="cursor:pointer;" title="Remove"/>
+                                            </a> 
+                                        </apex:panelGroup>
+                                    </apex:panelGrid>
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+        </div>
+        <!-- Related List Popup End -->
+        
+        <!-- Header Part -->
+        <div class="header">
+            <div style="float:left;">
+                <table>
+                    <tr>
+                        <td> <apex:image url="{!URLFOR($Resource.Resources, '/Images/Icon.png')}" width="50" height="50"/></td>
+                        <td> <br/><h1 style="font-size: medium;"><font style="color: #999;">Document Template:&nbsp;</font><br/>{!emailTemp.Name}</h1></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="float:right;">
+                <apex:commandButton value="Save" onclick="beforeTextSave();" reRender="msgpost" oncomplete="return false;" style="width:100px;height:30px; color:white; background:#2f8daf;"/>    
+                <apex:commandButton value="Cancel" action="{!Cancel}" oncomplete="return false;" style="width:100px;height:30px;"/>
+            </div>
+        </div>
+        
+        <button id="btn-insertField" class="btn-cls" style="background:#d7d7d7">Insert Field</button>
+        <!--<button id="btn-relatedList" class="btn-cls" style="background:#d7d7d7">Related List</button> -->
+        <!--<button id="btn-condition" class="btn-cls" style="background:#d7d7d7">Condition</button> -->
+        
+        <div id="contentLoading" style="display:none; ">
+            <img id="contentLoading1" src="/img/loading32.gif" alt="Loading graphic" />
+        </div>
+        
+        <apex:inputTextarea id="msgpost"  style="bodyText" richText="false" value="{!emailTemp.Body__c}" />
+        
+        <script type = "text/javascript">
+            
+            CKEDITOR.replace( '{!$Component.msgpost}',
+            {            
+                allowedContent: true,    
+                filebrowserBrowseUrl : '{!$Page.SiteFileBrowser}'+'?clickon=1',   
+                filebrowserImageBrowseUrl: '{!$Page.SiteFileBrowser}'      
+            });
+            
+            function beforeTextSave() {
+                var htmlBody = '';
+                var objEditor = CKEDITOR.instances['{!$Component.frm.msgpost}'];
+                //alert(objEditor.getData());
+                document.getElementById('{!$Component.frm.msgpost}').value = objEditor.getData();
+                htmlBody = objEditor.getData(); 
+                //CKEDITOR.instances['{!$Component.frm.msgpost}'].element.getHtml();
+                
+                //alert(htmlBody);
+                var objName = $('.selectedObject').val();
+                if(objName != undefined && objName != ''){
+                if(htmlBody != undefined && htmlBody != ''){
+                  SaveTemplate(objName,htmlBody);
+                }
+                    
+                }
+                else{
+                    alert('Please select parent object first.');
+                }
+            }
+        </script>     
+        <br/><br/>
+        
+        <apex:actionFunction name="SaveTemplate" action="{!createTemplateRecord}" status="loading" reRender="">
+            <apex:param name="parm6" value="" assignTo="{!selectedObject}"/>
+            <apex:param name="parm7" value="" assignTo="{!htmlValue}"/>
+        </apex:actionFunction>
+        
+    </apex:form>
+</apex:page>
